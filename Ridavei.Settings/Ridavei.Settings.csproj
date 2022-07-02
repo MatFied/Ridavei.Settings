@@ -1,0 +1,50 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>net452;net462;net472;net48;netcoreapp3.1;net5.0;net6.0</TargetFrameworks>
+		<PackageTags>settings;builder</PackageTags>
+		<Title>Ridavei.Settings</Title>
+		<AssemblyVersion>1.0</AssemblyVersion>
+		<Version>1.0.0.0</Version>
+		<FileVersion>1.0.0.0</FileVersion>
+		<Authors>Mateusz Fiedorowicz</Authors>
+		<Copyright>Mateusz Fiedorowicz</Copyright>
+		<Description>Builder to get and set values ​​in settings.</Description>
+		<RepositoryUrl>https://github.com/MatFied/Ridavei.Settings.git</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<GenerateDocumentationFile>True</GenerateDocumentationFile>
+		<SignAssembly>True</SignAssembly>
+		<AssemblyOriginatorKeyFile>Ridavei.snk</AssemblyOriginatorKeyFile>
+		<PublishRepositoryUrl>true</PublishRepositoryUrl>
+		<EmbedUntrackedSources>true</EmbedUntrackedSources>
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+		<EmbedUntrackedSources>true</EmbedUntrackedSources>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
+		<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp3.1' OR '$(TargetFramework)' == 'net5.0'">
+		<PackageReference Include="System.Runtime.Caching" Version="5.0.0" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
+		<PackageReference Include="System.Runtime.Caching" Version="6.0.0" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(TargetFramework)' == 'net452' OR '$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'net472' OR '$(TargetFramework)' == 'net48'">
+		<Reference Include="System.Runtime.Caching" />
+	</ItemGroup>
+	
+	<ItemGroup>
+		<InternalsVisibleTo Include="$(AssemblyName).Tests, PublicKey=0024000004800000940000000602000000240000525341310004000001000100f1c4721baf6cd8cacadb103c05566f32ea44fbb4a0b14d548246e34013eabe49d8c674b48fcf73dead2ff78e01d5a5659cbcdabb919c8c92ae3827b4bf2d37d2e4f416adcd16a8e4086340fce25bbc6b731a9f5f210adb54a1fb9eaf54eae31719b301b4994045d9aeb65f27a98b08c65b5dcd69327251ee35246888160821cd" />
+	</ItemGroup>
+
+</Project>

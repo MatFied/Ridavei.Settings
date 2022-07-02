@@ -1,0 +1,56 @@
+name: .NET
+
+on:
+  push:
+    branches: [ main ]
+    tags: v1.*
+    paths-ignore:
+    - 'README.md'
+
+jobs:
+  build-and-test:
+    name: Build and Test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macOS-latest]
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v2
+      with:
+        dotnet-version: |
+          3.1.x
+          5.0.x
+          6.0.x
+    - name: Restore dependencies
+      run: dotnet restore
+    - name: Build
+      run: dotnet build --configuration Release --no-restore
+    - name: Test
+      run: dotnet test --no-restore --verbosity normal
+      
+    - if: startsWith(github.ref, 'refs/tags/')
+      name: Pack library
+      run: dotnet pack --no-build --configuration Release --output out
+    - if: startsWith(github.ref, 'refs/tags/')
+      name: Upload artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: Artifact
+        path: ${{ github.workspace }}/out
+        if-no-files-found: error
+  publish:
+    name: Publish
+    needs: build-and-test
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: windows-latest
+    steps:
+    - name: Download artifact
+      uses: actions/download-artifact@v2
+      with:
+        name: Artifact
+    - name: Publish to NuGet
+      run: nuget push **\*.nupkg -Source 'https://api.nuget.org/v3/index.json' -ApiKey ${{secrets.NUGET_SECRET}}
+    
