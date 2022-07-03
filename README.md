@@ -3,6 +3,7 @@
 ## What is Settings?
 
 Ridavei.Settings is a cross-platform library created to ease getting and setting values in settings manager.
+For caching it uses [MemoryCache.Default](https://docs.microsoft.com/pl-pl/dotnet/api/system.runtime.caching.memorycache.default).
 
 ## Examples in using Settings
 
