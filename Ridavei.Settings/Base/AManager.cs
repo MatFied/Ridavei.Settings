@@ -8,9 +8,9 @@ namespace Ridavei.Settings.Base
     /// <summary>
     /// Abstract manager class to help retrieve <see cref="ISettings"/>.
     /// </summary>
-    public abstract class AManager
+    public abstract class AManager : IDisposable
     {
-        private readonly Dictionary<string, ISettings> _dictionaries = new Dictionary<string, ISettings>();
+        private readonly Dictionary<string, ASettings> _dictionaries = new Dictionary<string, ASettings>();
         private bool _initialized = false;
 
         /// <summary>
@@ -61,6 +61,15 @@ namespace Ridavei.Settings.Base
         /// </summary>
         /// <param name="dictionaryName">Name of the dictionary</param>
         /// <returns>Settings</returns>
-        protected abstract ISettings GetSettingsObject(string dictionaryName);
+        protected abstract ASettings GetSettingsObject(string dictionaryName);
+
+        /// <summary>
+        /// Releases all resources used by the Manager object.
+        /// </summary>
+        public virtual void Dispose()
+        {
+            foreach (var dictionary in _dictionaries)
+                dictionary.Value.Dispose();
+        }
     }
 }

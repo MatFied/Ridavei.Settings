@@ -19,9 +19,11 @@ namespace Ridavei.Settings.Tests
         {
             Should.NotThrow(() =>
             {
-                var manager = new MockManager();
-                manager.UseCache.ShouldBe(false);
-                manager.CacheTimeout.ShouldBe(0);
+                using (var manager = new MockManager())
+                {
+                    manager.UseCache.ShouldBe(false);
+                    manager.CacheTimeout.ShouldBe(0);
+                }
             });
         }
 
@@ -32,10 +34,12 @@ namespace Ridavei.Settings.Tests
             {
                 var useCache = true;
                 var cacheTimeout = 50;
-                var manager = new MockManager();
-                manager.Init(useCache, cacheTimeout);
-                manager.UseCache.ShouldBe(useCache);
-                manager.CacheTimeout.ShouldBe(cacheTimeout);
+                using (var manager = new MockManager())
+                {
+                    manager.Init(useCache, cacheTimeout);
+                    manager.UseCache.ShouldBe(useCache);
+                    manager.CacheTimeout.ShouldBe(cacheTimeout);
+                }
             });
         }
 
@@ -46,13 +50,15 @@ namespace Ridavei.Settings.Tests
             {
                 var useCache = true;
                 var cacheTimeout = 50;
-                var manager = new MockManager();
-                manager.Init(useCache, cacheTimeout);
+                using (var manager = new MockManager())
+                {
+                    manager.Init(useCache, cacheTimeout);
 
-                for (int i = 0; i < 10; i++)
-                    manager.Init(i % 2 == 1, i);
-                manager.UseCache.ShouldBe(useCache);
-                manager.CacheTimeout.ShouldBe(cacheTimeout);
+                    for (int i = 0; i < 10; i++)
+                        manager.Init(i % 2 == 1, i);
+                    manager.UseCache.ShouldBe(useCache);
+                    manager.CacheTimeout.ShouldBe(cacheTimeout);
+                }
             });
         }
 
@@ -61,7 +67,8 @@ namespace Ridavei.Settings.Tests
         {
             Should.Throw<ArgumentNullException>(() =>
             {
-                new MockManager().GetSettings(null);
+                using (var manager = new MockManager())
+                    manager.GetSettings(null);
             });
         }
 
@@ -70,7 +77,8 @@ namespace Ridavei.Settings.Tests
         {
             Should.Throw<ArgumentNullException>(() =>
             {
-                new MockManager().GetSettings("");
+                using (var manager = new MockManager())
+                    manager.GetSettings("");
             });
         }
 
@@ -79,7 +87,8 @@ namespace Ridavei.Settings.Tests
         {
             Should.Throw<ArgumentNullException>(() =>
             {
-                new MockManager().GetSettings("     ");
+                using (var manager = new MockManager())
+                    manager.GetSettings("     ");
             });
         }
 
@@ -88,8 +97,11 @@ namespace Ridavei.Settings.Tests
         {
             Should.NotThrow(() =>
             {
-                var settings = new MockManager().GetSettings(DictionaryName);
-                settings.ShouldNotBeNull();
+                using (var manager = new MockManager())
+                {
+                    var settings = manager.GetSettings(DictionaryName);
+                    settings.ShouldNotBeNull();
+                }
             });
         }
 
@@ -98,12 +110,14 @@ namespace Ridavei.Settings.Tests
         {
             Should.NotThrow(() =>
             {
-                var manager = new MockManager();
-                var settings = manager.GetSettings(DictionaryName);
-                settings.ShouldNotBeNull();
-                var settingsToCompare = manager.GetSettings(DictionaryName);
-                settingsToCompare.ShouldNotBeNull();
-                settingsToCompare.ShouldBe(settings);
+                using (var manager = new MockManager())
+                {
+                    var settings = manager.GetSettings(DictionaryName);
+                    settings.ShouldNotBeNull();
+                    var settingsToCompare = manager.GetSettings(DictionaryName);
+                    settingsToCompare.ShouldNotBeNull();
+                    settingsToCompare.ShouldBe(settings);
+                }
             });
         }
     }

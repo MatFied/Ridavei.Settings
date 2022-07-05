@@ -1,5 +1,4 @@
 ﻿using Ridavei.Settings.Base;
-using Ridavei.Settings.Interface;
 
 using Ridavei.Settings.Tests.Settings;
 
@@ -9,7 +8,7 @@ namespace Ridavei.Settings.Tests.Managers
     {
         public MockManager() : base() { }
 
-        protected override ISettings GetSettingsObject(string dictionaryName)
+        protected override ASettings GetSettingsObject(string dictionaryName)
         {
             return new MockSettings(dictionaryName, UseCache, CacheTimeout);
         }

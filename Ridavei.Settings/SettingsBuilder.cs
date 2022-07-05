@@ -10,7 +10,7 @@ namespace Ridavei.Settings
     /// <summary>
     /// Builder to receive settings.
     /// </summary>
-    public class SettingsBuilder
+    public class SettingsBuilder : IDisposable
     {
         private bool _useCache;
         private int _cacheTimeout = Consts.DefaultCacheTimeout;
@@ -75,6 +75,15 @@ namespace Ridavei.Settings
                 throw new ManagerNotExistsException();
             _manager.Init(_useCache, _cacheTimeout);
             return _manager.GetSettings(dictionaryName);
+        }
+
+        /// <summary>
+        /// Releases all resources used by the Settings builder object.
+        /// </summary>
+        public void Dispose()
+        {
+            if (_manager != null)
+                _manager.Dispose();
         }
     }
 }
