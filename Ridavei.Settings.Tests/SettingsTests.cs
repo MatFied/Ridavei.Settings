@@ -57,10 +57,12 @@ namespace Ridavei.Settings.Tests
                 bool useCache = true;
                 int cacheTimeout = 10;
 
-                var settings = new MockSettings(DictionaryName, useCache, cacheTimeout);
-                settings.DictionaryName.ShouldBe(DictionaryName);
-                settings.UseCache.ShouldBe(useCache);
-                settings.CacheTimeout.ShouldBe(cacheTimeout);
+                using (var settings = new MockSettings(DictionaryName, useCache, cacheTimeout))
+                {
+                    settings.DictionaryName.ShouldBe(DictionaryName);
+                    settings.UseCache.ShouldBe(useCache);
+                    settings.CacheTimeout.ShouldBe(cacheTimeout);
+                }
             });
         }
 
@@ -72,11 +74,13 @@ namespace Ridavei.Settings.Tests
                 bool useCache = true;
                 int cacheTimeout = -10;
 
-                var settings = new MockSettings(DictionaryName, useCache, cacheTimeout);
-                settings.DictionaryName.ShouldBe(DictionaryName);
-                settings.UseCache.ShouldBe(useCache);
-                settings.CacheTimeout.ShouldNotBe(cacheTimeout);
-                settings.CacheTimeout.ShouldBeGreaterThan(0);
+                using (var settings = new MockSettings(DictionaryName, useCache, cacheTimeout))
+                {
+                    settings.DictionaryName.ShouldBe(DictionaryName);
+                    settings.UseCache.ShouldBe(useCache);
+                    settings.CacheTimeout.ShouldNotBe(cacheTimeout);
+                    settings.CacheTimeout.ShouldBeGreaterThan(0);
+                }
             });
         }
 
@@ -85,7 +89,8 @@ namespace Ridavei.Settings.Tests
         {
             Should.Throw<ArgumentNullException>(() =>
             {
-                CreateSettings().Set(null, "Test");
+                using (var settings = CreateSettings())
+                    settings.Set(null, "Test");
             });
         }
 
@@ -94,7 +99,8 @@ namespace Ridavei.Settings.Tests
         {
             Should.Throw<ArgumentNullException>(() =>
             {
-                CreateSettings().Set("", "Test");
+                using (var settings = CreateSettings())
+                    settings.Set("", "Test");
             });
         }
 
@@ -103,7 +109,8 @@ namespace Ridavei.Settings.Tests
         {
             Should.Throw<ArgumentNullException>(() =>
             {
-                CreateSettings().Set("            ", "Test");
+                using (var settings = CreateSettings())
+                    settings.Set("            ", "Test");
             });
         }
 
@@ -112,7 +119,8 @@ namespace Ridavei.Settings.Tests
         {
             Should.Throw<ArgumentNullException>(() =>
             {
-                CreateSettings().Set(KeyName, null);
+                using (var settings = CreateSettings())
+                    settings.Set(KeyName, null);
             });
         }
 
@@ -121,7 +129,8 @@ namespace Ridavei.Settings.Tests
         {
             Should.Throw<ArgumentNullException>(() =>
             {
-                CreateSettings().Set(KeyName, "");
+                using (var settings = CreateSettings())
+                    settings.Set(KeyName, "");
             });
         }
 
@@ -130,7 +139,8 @@ namespace Ridavei.Settings.Tests
         {
             Should.Throw<ArgumentNullException>(() =>
             {
-                CreateSettings().Set(KeyName, "            ");
+                using (var settings = CreateSettings())
+                    settings.Set(KeyName, "            ");
             });
         }
 
@@ -139,7 +149,8 @@ namespace Ridavei.Settings.Tests
         {
             Should.NotThrow(() =>
             {
-                CreateSettings().Set(KeyName, "Test");
+                using (var settings = CreateSettings())
+                    settings.Set(KeyName, "Test");
             });
         }
 
@@ -148,7 +159,8 @@ namespace Ridavei.Settings.Tests
         {
             Should.NotThrow(() =>
             {
-                CreateSettings(true).Set(KeyName, "Test");
+                using (var settings = CreateSettings(true))
+                    settings.Set(KeyName, "Test");
             });
         }
 
@@ -157,7 +169,8 @@ namespace Ridavei.Settings.Tests
         {
             Should.Throw<ArgumentNullException>(() =>
             {
-                CreateSettings().Get(null);
+                using (var settings = CreateSettings())
+                    settings.Get(null);
             });
         }
 
@@ -166,7 +179,8 @@ namespace Ridavei.Settings.Tests
         {
             Should.Throw<ArgumentNullException>(() =>
             {
-                CreateSettings().Get("");
+                using (var settings = CreateSettings())
+                    settings.Get("");
             });
         }
 
@@ -175,7 +189,8 @@ namespace Ridavei.Settings.Tests
         {
             Should.Throw<ArgumentNullException>(() =>
             {
-                CreateSettings().Get("            ");
+                using (var settings = CreateSettings())
+                    settings.Get("            ");
             });
         }
 
@@ -184,9 +199,11 @@ namespace Ridavei.Settings.Tests
         {
             Should.Throw<KeyNotFoundException>(() =>
             {
-                var settings = CreateSettings();
-                settings.ReturnValue = false;
-                settings.Get(KeyName);
+                using (var settings = CreateSettings())
+                {
+                    settings.ReturnValue = false;
+                    settings.Get(KeyName);
+                }
             });
         }
 
@@ -195,9 +212,11 @@ namespace Ridavei.Settings.Tests
         {
             Should.Throw<KeyNotFoundException>(() =>
             {
-                var settings = CreateSettings(true);
-                settings.ReturnValue = false;
-                settings.Get(KeyName);
+                using (var settings = CreateSettings(true))
+                {
+                    settings.ReturnValue = false;
+                    settings.Get(KeyName);
+                }
             });
         }
 
@@ -206,8 +225,8 @@ namespace Ridavei.Settings.Tests
         {
             Should.NotThrow(() =>
             {
-                var settings = CreateSettings();
-                settings.Get(KeyName).ShouldNotBeNullOrEmpty();
+                using (var settings = CreateSettings())
+                    settings.Get(KeyName).ShouldNotBeNullOrEmpty();
                 CacheManager.Get(CacheManager.GenerateKeyName(DictionaryName, KeyName)).ShouldBeNull();
             });
         }
@@ -217,12 +236,14 @@ namespace Ridavei.Settings.Tests
         {
             Should.NotThrow(() =>
             {
-                var settings = CreateSettings(true);
-                var val = settings.Get(KeyName);
-                val.ShouldNotBeNullOrEmpty();
-                var cacheVal = CacheManager.Get(CacheManager.GenerateKeyName(DictionaryName, KeyName)) as string;
-                cacheVal.ShouldNotBeNullOrEmpty();
-                val.ShouldBe(cacheVal);
+                using (var settings = CreateSettings(true))
+                {
+                    var val = settings.Get(KeyName);
+                    val.ShouldNotBeNullOrEmpty();
+                    var cacheVal = CacheManager.Get(CacheManager.GenerateKeyName(DictionaryName, KeyName)) as string;
+                    cacheVal.ShouldNotBeNullOrEmpty();
+                    val.ShouldBe(cacheVal);
+                }
             });
         }
 
@@ -231,7 +252,8 @@ namespace Ridavei.Settings.Tests
         {
             Should.Throw<ArgumentNullException>(() =>
             {
-                CreateSettings().Get(null, null);
+                using (var settings = CreateSettings())
+                    settings.Get(null, null);
             });
         }
 
@@ -240,7 +262,8 @@ namespace Ridavei.Settings.Tests
         {
             Should.Throw<ArgumentNullException>(() =>
             {
-                CreateSettings().Get("", null);
+                using (var settings = CreateSettings())
+                    settings.Get("", null);
             });
         }
 
@@ -249,7 +272,8 @@ namespace Ridavei.Settings.Tests
         {
             Should.Throw<ArgumentNullException>(() =>
             {
-                CreateSettings().Get("            ", null);
+                using (var settings = CreateSettings())
+                    settings.Get("            ", null);
             });
         }
 
@@ -258,9 +282,11 @@ namespace Ridavei.Settings.Tests
         {
             Should.NotThrow(() =>
             {
-                var settings = CreateSettings();
-                settings.ReturnValue = false;
-                settings.Get(KeyName, "def").ShouldNotBeNullOrEmpty();
+                using (var settings = CreateSettings())
+                {
+                    settings.ReturnValue = false;
+                    settings.Get(KeyName, "def").ShouldNotBeNullOrEmpty();
+                }
             });
         }
 
@@ -269,12 +295,14 @@ namespace Ridavei.Settings.Tests
         {
             Should.NotThrow(() =>
             {
-                var defaultValue = "def";
-                var settings = CreateSettings(true);
-                settings.ReturnValue = false;
-                var val = settings.Get(KeyName, defaultValue);
-                val.ShouldNotBeNullOrEmpty();
-                val.ShouldBe(defaultValue);
+                using (var settings = CreateSettings(true))
+                {
+                    var defaultValue = "def";
+                    settings.ReturnValue = false;
+                    var val = settings.Get(KeyName, defaultValue);
+                    val.ShouldNotBeNullOrEmpty();
+                    val.ShouldBe(defaultValue);
+                }
                 CacheManager.Get(CacheManager.GenerateKeyName(DictionaryName, KeyName)).ShouldBeNull();
             });
         }
@@ -284,11 +312,13 @@ namespace Ridavei.Settings.Tests
         {
             Should.NotThrow(() =>
             {
-                var defaultValue = "def";
-                var settings = CreateSettings();
-                var val = settings.Get(KeyName, defaultValue);
-                val.ShouldNotBeNullOrEmpty();
-                val.ShouldNotBe(defaultValue);
+                using (var settings = CreateSettings())
+                {
+                    var defaultValue = "def";
+                    var val = settings.Get(KeyName, defaultValue);
+                    val.ShouldNotBeNullOrEmpty();
+                    val.ShouldNotBe(defaultValue);
+                }
                 CacheManager.Get(CacheManager.GenerateKeyName(DictionaryName, KeyName)).ShouldBeNull();
             });
         }
@@ -298,14 +328,16 @@ namespace Ridavei.Settings.Tests
         {
             Should.NotThrow(() =>
             {
-                var defaultValue = "def";
-                var settings = CreateSettings(true);
-                var val = settings.Get(KeyName, defaultValue);
-                val.ShouldNotBeNullOrEmpty();
-                val.ShouldNotBe(defaultValue);
-                var cacheVal = CacheManager.Get(CacheManager.GenerateKeyName(DictionaryName, KeyName)) as string;
-                cacheVal.ShouldNotBeNullOrEmpty();
-                val.ShouldBe(cacheVal);
+                using (var settings = CreateSettings(true))
+                {
+                    var defaultValue = "def";
+                    var val = settings.Get(KeyName, defaultValue);
+                    val.ShouldNotBeNullOrEmpty();
+                    val.ShouldNotBe(defaultValue);
+                    var cacheVal = CacheManager.Get(CacheManager.GenerateKeyName(DictionaryName, KeyName)) as string;
+                    cacheVal.ShouldNotBeNullOrEmpty();
+                    val.ShouldBe(cacheVal);
+                }
             });
         }
 
@@ -314,11 +346,13 @@ namespace Ridavei.Settings.Tests
         {
             Should.NotThrow(() =>
             {
-                var settings = CreateSettings();
-                settings.ReturnValue = false;
-                var val = settings.GetAll();
-                val.ShouldNotBeNull();
-                val.Count.ShouldBe(0);
+                using (var settings = CreateSettings())
+                {
+                    settings.ReturnValue = false;
+                    var val = settings.GetAll();
+                    val.ShouldNotBeNull();
+                    val.Count.ShouldBe(0);
+                }
                 CacheManager.Get(CacheManager.GenerateKeyNameForGetAllDictionary(DictionaryName)).ShouldBeNull();
             });
         }
@@ -328,14 +362,16 @@ namespace Ridavei.Settings.Tests
         {
             Should.NotThrow(() =>
             {
-                var settings = CreateSettings(true);
-                settings.ReturnValue = false;
-                var val = settings.GetAll();
-                val.ShouldNotBeNull();
-                val.Count.ShouldBe(0);
-                var keys = CacheManager.Get(CacheManager.GenerateKeyNameForGetAllDictionary(DictionaryName)) as List<string>;
-                keys.ShouldNotBeNull();
-                keys.Count.ShouldBe(0);
+                using (var settings = CreateSettings(true))
+                {
+                    settings.ReturnValue = false;
+                    var val = settings.GetAll();
+                    val.ShouldNotBeNull();
+                    val.Count.ShouldBe(0);
+                    var keys = CacheManager.Get(CacheManager.GenerateKeyNameForGetAllDictionary(DictionaryName)) as List<string>;
+                    keys.ShouldNotBeNull();
+                    keys.Count.ShouldBe(0);
+                }
             });
         }
 
@@ -344,10 +380,12 @@ namespace Ridavei.Settings.Tests
         {
             Should.NotThrow(() =>
             {
-                var settings = CreateSettings();
-                var val = settings.GetAll();
-                val.ShouldNotBeNull();
-                val.Count.ShouldBe(10);
+                using (var settings = CreateSettings())
+                {
+                    var val = settings.GetAll();
+                    val.ShouldNotBeNull();
+                    val.Count.ShouldBe(10);
+                }
                 CacheManager.Get(CacheManager.GenerateKeyNameForGetAllDictionary(DictionaryName)).ShouldBeNull();
             });
         }
@@ -357,15 +395,24 @@ namespace Ridavei.Settings.Tests
         {
             Should.NotThrow(() =>
             {
-                var settings = CreateSettings(true);
-                var val = settings.GetAll();
-                val.ShouldNotBeNull();
-                val.Count.ShouldBe(10);
-                var keys = CacheManager.Get(CacheManager.GenerateKeyNameForGetAllDictionary(DictionaryName)) as List<string>;
-                keys.ShouldNotBeNull();
-                keys.Count.ShouldBe(10);
-                for (int i = 0; i < keys.Count; i++)
-                    MemoryCache.Default.Remove(CacheManager.GenerateKeyName(DictionaryName, i.ToString()));
+                using (var settings = CreateSettings(true))
+                {
+                    var val = settings.GetAll();
+                    val.ShouldNotBeNull();
+                    val.Count.ShouldBe(10);
+                    List<string> keys = null;
+                    try
+                    {
+                        keys = CacheManager.Get(CacheManager.GenerateKeyNameForGetAllDictionary(DictionaryName)) as List<string>;
+                        keys.ShouldNotBeNull();
+                        keys.Count.ShouldBe(10);
+                    }
+                    finally
+                    {
+                        for (int i = 0; i < keys.Count; i++)
+                            MemoryCache.Default.Remove(CacheManager.GenerateKeyName(DictionaryName, i.ToString()));
+                    }
+                }
             });
         }
 
@@ -374,19 +421,28 @@ namespace Ridavei.Settings.Tests
         {
             Should.NotThrow(() =>
             {
-                var settings = CreateSettings(true);
-                var val = settings.GetAll();
-                val.ShouldNotBeNull();
-                val.Count.ShouldBe(10);
-                var valSecond = settings.GetAll();
-                valSecond.ShouldNotBeNull();
-                valSecond.Count.ShouldBe(10);
-                valSecond.ShouldBe(val);
-                var keys = CacheManager.Get(CacheManager.GenerateKeyNameForGetAllDictionary(DictionaryName)) as List<string>;
-                keys.ShouldNotBeNull();
-                keys.Count.ShouldBe(10);
-                for (int i = 0; i < keys.Count; i++)
-                    MemoryCache.Default.Remove(CacheManager.GenerateKeyName(DictionaryName, i.ToString()));
+                using (var settings = CreateSettings(true))
+                {
+                    var val = settings.GetAll();
+                    val.ShouldNotBeNull();
+                    val.Count.ShouldBe(10);
+                    var valSecond = settings.GetAll();
+                    valSecond.ShouldNotBeNull();
+                    valSecond.Count.ShouldBe(10);
+                    valSecond.ShouldBe(val);
+                    List<string> keys = null;
+                    try
+                    {
+                        keys = CacheManager.Get(CacheManager.GenerateKeyNameForGetAllDictionary(DictionaryName)) as List<string>;
+                        keys.ShouldNotBeNull();
+                        keys.Count.ShouldBe(10);
+                    }
+                    finally
+                    {
+                        for (int i = 0; i < keys.Count; i++)
+                            MemoryCache.Default.Remove(CacheManager.GenerateKeyName(DictionaryName, i.ToString()));
+                    }
+                }
             });
         }
 

@@ -2,8 +2,9 @@
 
 ## What is Settings?
 
-Ridavei.Settings is a cross-platform library created to ease getting and setting values in settings manager.
-For caching it uses [MemoryCache.Default](https://docs.microsoft.com/pl-pl/dotnet/api/system.runtime.caching.memorycache.default).
+Ridavei.Settings is a cross-platform library created to ease getting and setting values in settings manager.<br />
+For caching it uses [MemoryCache.Default](https://docs.microsoft.com/pl-pl/dotnet/api/system.runtime.caching.memorycache.default).<br />
+Classes implement the [IDisposable](https://docs.microsoft.com/pl-pl/dotnet/api/system.idisposable) interface to dispose objects that are created by the extensions.
 
 ## Examples in using Settings
 
@@ -18,14 +19,16 @@ namespace TestProgram
     {
         public static void Main(string[] args)
         {
-            ISettings settings = SettingsBuilder
-                .CreateBuilder()
-                .SetManager(YOUR_MANAGER_CLASS)
-                .GetSettings("DictionaryName");
+            using (ISettings settings = SettingsBuilder.CreateBuilder())
+            {
+                settings
+                    .SetManager(YOUR_MANAGER_CLASS)
+                    .GetSettings("DictionaryName");
 
-            //You can use settings.Get("ExampleKey", "DefaultValue") if you want to retrieve the default value if the key doesn't exists.
-            string value = settings.Get("ExampleKey");
-            settings.Set("AnotherKey", "NewValue");
+                //You can use settings.Get("ExampleKey", "DefaultValue") if you want to retrieve the default value if the key doesn't exists.
+                string value = settings.Get("ExampleKey");
+                settings.Set("AnotherKey", "NewValue");
+            }
         }
     }
 }
@@ -43,13 +46,15 @@ namespace TestProgram
     {
         public static void Main(string[] args)
         {
-            ISettings settings = SettingsBuilder
-                .CreateBuilder()
-                .SetManager(YOUR_MANAGER_CLASS)
-                .GetSettings("DictionaryName");
-
-            //Returns the IReadOnlyDictionary to prevent from value changing.
-            IReadOnlyDictionary<string, string> dict = settings.GetAll();
+            using (ISettings settings = SettingsBuilder.CreateBuilder())
+            {
+                settings
+                    .SetManager(YOUR_MANAGER_CLASS)
+                    .GetSettings("DictionaryName");
+                    
+                //Returns the IReadOnlyDictionary to prevent from value changing.
+                IReadOnlyDictionary<string, string> dict = settings.GetAll();
+            }
         }
     }
 }

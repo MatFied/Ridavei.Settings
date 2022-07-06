@@ -9,7 +9,7 @@ namespace Ridavei.Settings.Base
     /// <summary>
     /// Abstract class for the settings classes. It can retrieve and set objects in the settings.
     /// </summary>
-    public abstract class ASettings : ISettings
+    public abstract class ASettings : ISettings, IDisposable
     {
         /// <summary>
         /// Name of the dictionary
@@ -176,5 +176,10 @@ namespace Ridavei.Settings.Base
             var genKey = CacheManager.GenerateKeyName(DictionaryName, key);
             CacheManager.Add(genKey, value, absoluteExpiration);
         }
+
+        /// <summary>
+        /// Releases all resources used by the Settings object.
+        /// </summary>
+        public virtual void Dispose() { }
     }
 }
