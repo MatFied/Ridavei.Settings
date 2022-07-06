@@ -5,8 +5,8 @@
 		<PackageTags>settings;builder</PackageTags>
 		<Title>Ridavei.Settings</Title>
 		<AssemblyVersion>1.0</AssemblyVersion>
-		<Version>1.0.1.0</Version>
-		<FileVersion>1.0.1.0</FileVersion>
+		<Version>1.0.1.1</Version>
+		<FileVersion>1.0.1.1</FileVersion>
 		<Authors>Mateusz Fiedorowicz</Authors>
 		<Copyright>Mateusz Fiedorowicz</Copyright>
 		<Description>Builder to get and set values ​​in settings.</Description>
