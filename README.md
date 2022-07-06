@@ -2,8 +2,8 @@
 
 ## What is Settings?
 
-Ridavei.Settings is a cross-platform library created to ease getting and setting values in settings manager.__
-For caching it uses [MemoryCache.Default](https://docs.microsoft.com/pl-pl/dotnet/api/system.runtime.caching.memorycache.default).__
+Ridavei.Settings is a cross-platform library created to ease getting and setting values in settings manager.<br />
+For caching it uses [MemoryCache.Default](https://docs.microsoft.com/pl-pl/dotnet/api/system.runtime.caching.memorycache.default).<br />
 Classes implement the [IDisposable](https://docs.microsoft.com/pl-pl/dotnet/api/system.idisposable) interface to dispose objects that are created by the extensions.
 
 ## Examples in using Settings
