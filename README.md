@@ -19,9 +19,9 @@ namespace TestProgram
     {
         public static void Main(string[] args)
         {
-            using (ISettings settings = SettingsBuilder.CreateBuilder())
+            using (SettingsBuilder settingsBuilder = SettingsBuilder.CreateBuilder())
             {
-                settings
+                ISettings settings = settingsBuilder
                     .SetManager(YOUR_MANAGER_CLASS)
                     .GetSettings("DictionaryName");
 
@@ -46,9 +46,9 @@ namespace TestProgram
     {
         public static void Main(string[] args)
         {
-            using (ISettings settings = SettingsBuilder.CreateBuilder())
+            using (SettingsBuilder settingsBuilder = SettingsBuilder.CreateBuilder())
             {
-                settings
+                ISettings settings = settingsBuilder
                     .SetManager(YOUR_MANAGER_CLASS)
                     .GetSettings("DictionaryName");
                     
