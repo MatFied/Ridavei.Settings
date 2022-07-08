@@ -45,18 +45,25 @@ namespace Ridavei.Settings
         /// <returns>Builder</returns>
         public SettingsBuilder SetCacheTimeout(int cacheItemTimeout)
         {
+            _cacheTimeout = cacheItemTimeout;
             return this;
         }
 
         /// <summary>
         /// Sets the manager object used to retrieve settings.
+        /// <para>The manager will be disposed by the <see cref="SettingsBuilder"/>.</para>
+        /// <para>If there was a previously setted manager then it will be disposed.</para>
         /// </summary>
         /// <param name="manager">Manager object</param>
         /// <returns>Builder</returns>
         /// <exception cref="ArgumentNullException">Throwed when the manager object is null.</exception>
         public SettingsBuilder SetManager(AManager manager)
         {
-            _manager = manager ?? throw new ArgumentNullException(nameof(manager), "The manager object cannot be null.");
+            if (manager == null)
+                throw new ArgumentNullException(nameof(manager), "The manager object cannot be null.");
+
+            DisposeManager();
+            _manager = manager;
             return this;
         }
 
@@ -81,6 +88,11 @@ namespace Ridavei.Settings
         /// Releases all resources used by the Settings builder object.
         /// </summary>
         public void Dispose()
+        {
+            DisposeManager();
+        }
+
+        private void DisposeManager()
         {
             if (_manager != null)
                 _manager.Dispose();

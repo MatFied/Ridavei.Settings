@@ -22,7 +22,7 @@ namespace TestProgram
             using (SettingsBuilder settingsBuilder = SettingsBuilder.CreateBuilder())
             {
                 ISettings settings = settingsBuilder
-                    .SetManager(YOUR_MANAGER_CLASS)
+                    .SetManager(YOUR_MANAGER_CLASS) //The manager class will be disposed by the SettingsBuilder.
                     .GetSettings("DictionaryName");
 
                 //You can use settings.Get("ExampleKey", "DefaultValue") if you want to retrieve the default value if the key doesn't exists.
@@ -49,7 +49,7 @@ namespace TestProgram
             using (SettingsBuilder settingsBuilder = SettingsBuilder.CreateBuilder())
             {
                 ISettings settings = settingsBuilder
-                    .SetManager(YOUR_MANAGER_CLASS)
+                    .SetManager(YOUR_MANAGER_CLASS) //The manager class will be disposed by the SettingsBuilder.
                     .GetSettings("DictionaryName");
                     
                 //Returns the IReadOnlyDictionary to prevent from value changing.
