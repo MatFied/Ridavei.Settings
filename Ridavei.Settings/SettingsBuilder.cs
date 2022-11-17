@@ -70,6 +70,21 @@ namespace Ridavei.Settings
         }
 
         /// <summary>
+        /// Creates the <see cref="ISettings"/> object for the specifed dictionary name.
+        /// </summary>
+        /// <param name="dictionaryName">Name of the dictionary</param>
+        /// <exception cref="ArgumentNullException">Throwed when the name of the dictionary is null, empty or whitespace.</exception>
+        /// <exception cref="ManagerNotExistsException">Throwed when the manager object was not added.</exception>
+        /// <returns>Settings</returns>
+        public ISettings CreateSettings(string dictionaryName)
+        {
+            if (string.IsNullOrWhiteSpace(dictionaryName))
+                throw new ArgumentNullException(nameof(dictionaryName), "The name of the dictionary cannot be null or empty or whitespace.");
+            InitManager();
+            return _manager.CreateSettings(dictionaryName);
+        }
+
+        /// <summary>
         /// Retrieves the <see cref="ISettings"/> object for the specifed dictionary name.
         /// </summary>
         /// <param name="dictionaryName">Name of the dictionary</param>
@@ -80,10 +95,23 @@ namespace Ridavei.Settings
         {
             if (string.IsNullOrWhiteSpace(dictionaryName))
                 throw new ArgumentNullException(nameof(dictionaryName), "The name of the dictionary cannot be null or empty or whitespace.");
-            if (_manager == null)
-                throw new ManagerNotExistsException();
-            _manager.Init(_useCache, _cacheTimeout);
+            InitManager();
             return _manager.GetSettings(dictionaryName);
+        }
+
+        /// <summary>
+        /// Retrieves or creates the <see cref="ISettings"/> object for the specifed dictionary name.
+        /// </summary>
+        /// <param name="dictionaryName">Name of the dictionary</param>
+        /// <exception cref="ArgumentNullException">Throwed when the name of the dictionary is null, empty or whitespace.</exception>
+        /// <exception cref="ManagerNotExistsException">Throwed when the manager object was not added.</exception>
+        /// <returns>Settings</returns>
+        public ISettings GetOrCreateSettings(string dictionaryName)
+        {
+            if (string.IsNullOrWhiteSpace(dictionaryName))
+                throw new ArgumentNullException(nameof(dictionaryName), "The name of the dictionary cannot be null or empty or whitespace.");
+            InitManager();
+            return _manager.GetOrCreateSettings(dictionaryName);
         }
 
         /// <summary>
@@ -105,6 +133,17 @@ namespace Ridavei.Settings
                 _manager.Dispose();
                 _manager = null;
             }
+        }
+
+        /// <summary>
+        /// Initializes the Manager class.
+        /// </summary>
+        /// <exception cref="ManagerNotExistsException">Throwed when the manager object was not added.</exception>
+        private void InitManager()
+        {
+            if (_manager == null)
+                throw new ManagerNotExistsException();
+            _manager.Init(_useCache, _cacheTimeout);
         }
     }
 }

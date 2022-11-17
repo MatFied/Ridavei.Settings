@@ -8,9 +8,15 @@ namespace Ridavei.Settings.Tests.Managers
     {
         public MockManager() : base() { }
 
-        protected override ASettings GetSettingsObject(string dictionaryName)
+        protected override ASettings CreateSettingsObject(string dictionaryName)
         {
-            return new MockSettings(dictionaryName);
+            throw new System.NotImplementedException();
+        }
+
+        protected override bool TryGetSettingsObject(string dictionaryName, out ASettings settings)
+        {
+            settings = new MockSettings(dictionaryName);
+            return true;
         }
     }
 }

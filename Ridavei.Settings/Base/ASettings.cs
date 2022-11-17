@@ -13,6 +13,8 @@ namespace Ridavei.Settings.Base
     {
         private bool _initialized = false;
 
+        private static readonly object _lock = new object();
+
         /// <summary>
         /// Name of the dictionary
         /// </summary>
@@ -56,9 +58,12 @@ namespace Ridavei.Settings.Base
                 throw new ArgumentNullException(nameof(key), "The settings key cannot be null or empty or whitespace.");
             if (string.IsNullOrWhiteSpace(value))
                 throw new ArgumentNullException(nameof(value), $"The settings value for \"{key}\" cannot be null or empty or whitespace.");
-            SetValue(key, value);
-            if (UseCache)
-                AddToCache(key, value, EvictPolicyGenerator.GetAbsoluteExpirationTime(CacheTimeout));
+            lock (_lock)
+            {
+                SetValue(key, value);
+                if (UseCache)
+                    AddToCache(key, value, EvictPolicyGenerator.GetAbsoluteExpirationTime(CacheTimeout));
+            }
         }
 
         /// <inheritdoc/>
@@ -156,10 +161,13 @@ namespace Ridavei.Settings.Base
             value = GetFromCache(key, out var genKey);
             if (value == null || replaceAbsoluteExpiration)
             {
-                if (value == null)
-                    if (!TryGetValue(key, out value))
-                        return false;
-                CacheManager.Add(genKey, value, EvictPolicyGenerator.GetAbsoluteExpirationTime(CacheTimeout));
+                lock (_lock)
+                {
+                    if (value == null)
+                        if (!TryGetValue(key, out value))
+                            return false;
+                    CacheManager.Add(genKey, value, EvictPolicyGenerator.GetAbsoluteExpirationTime(CacheTimeout));
+                }
             }
             return true;
         }
@@ -180,13 +188,16 @@ namespace Ridavei.Settings.Base
             }
             else
             {
-                var res = GetAllValues();
-                keys = new List<string>(res.Keys);
-                var absoluteExpiration = EvictPolicyGenerator.GetAbsoluteExpirationTime(CacheTimeout);
-                foreach (var key in keys)
-                    AddToCache(key, res[key], absoluteExpiration);
-                CacheManager.Add(keyNameForGetAllDictionary, keys, absoluteExpiration);
-                return res;
+                lock (_lock)
+                {
+                    var res = GetAllValues();
+                    keys = new List<string>(res.Keys);
+                    var absoluteExpiration = EvictPolicyGenerator.GetAbsoluteExpirationTime(CacheTimeout);
+                    foreach (var key in keys)
+                        AddToCache(key, res[key], absoluteExpiration);
+                    CacheManager.Add(keyNameForGetAllDictionary, keys, absoluteExpiration);
+                    return res;
+                }
             }
         }
 
