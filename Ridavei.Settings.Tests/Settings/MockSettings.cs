@@ -8,7 +8,7 @@ namespace Ridavei.Settings.Tests.Settings
     {
         public bool ReturnValue = true;
 
-        public MockSettings(string dictionaryName, bool useCache, int cacheTimeout) : base(dictionaryName, useCache, cacheTimeout) { }
+        public MockSettings(string dictionaryName) : base(dictionaryName) { }
 
         protected override IReadOnlyDictionary<string, string> GetAllValues()
         {

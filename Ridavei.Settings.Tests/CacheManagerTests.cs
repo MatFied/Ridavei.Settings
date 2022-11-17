@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.Caching;
 
-using Ridavei.Settings.Tests.Managers;
+using Ridavei.Settings.Cache;
 
 using NUnit.Framework;
 using Shouldly;
@@ -20,17 +20,17 @@ namespace Ridavei.Settings.Tests
                 var seconds = 100;
                 var key = "Add__ObjectExistsInCache";
                 var expectedValue = "Test";
-                var time = CacheManager.GetAbsoluteExpiration(seconds);
+                var time = EvictPolicyGenerator.GetAbsoluteExpirationTime(seconds);
                 try
                 {
                     CacheManager.Add(key, expectedValue, time);
-                    var val = MemoryCache.Default.Get(key);
+                    var val = CacheManager.Get(key);
                     val.ShouldNotBeNull();
                     val.ShouldBe(expectedValue);
                 }
                 finally
                 {
-                    MemoryCache.Default.Remove(key);
+                    CacheManager.Remove(key);
                 }
             });
         }
@@ -43,10 +43,10 @@ namespace Ridavei.Settings.Tests
                 var seconds = 2;
                 var key = "Add_ExpireTime__ObjectNotExistsInCache";
                 var expectedValue = "Test";
-                var time = CacheManager.GetAbsoluteExpiration(seconds);
+                var time = EvictPolicyGenerator.GetAbsoluteExpirationTime(seconds);
                 CacheManager.Add(key, expectedValue, time);
                 Thread.Sleep((seconds + 1) * 1000);
-                var val = MemoryCache.Default.Get(key);
+                var val = CacheManager.Get(key);
                 val.ShouldBeNull();
             });
         }
@@ -59,7 +59,7 @@ namespace Ridavei.Settings.Tests
                 var seconds = 100;
                 var key = "Get_NonExistingValue__GetNull";
                 var expectedValue = "Test";
-                var time = CacheManager.GetAbsoluteExpiration(seconds);
+                var time = EvictPolicyGenerator.GetAbsoluteExpirationTime(seconds);
                 try
                 {
                     CacheManager.Add(key, expectedValue, time);
@@ -69,7 +69,7 @@ namespace Ridavei.Settings.Tests
                 }
                 finally
                 {
-                    MemoryCache.Default.Remove(key);
+                    CacheManager.Remove(key);
                 }
             });
         }
@@ -89,53 +89,8 @@ namespace Ridavei.Settings.Tests
         {
             Should.NotThrow(() =>
             {
-                var time = CacheManager.GetAbsoluteExpiration(100);
+                var time = EvictPolicyGenerator.GetAbsoluteExpirationTime(100);
                 Assert.True(DateTimeOffset.UtcNow < time);
-            });
-        }
-
-        [Test]
-        public void GenerateKeyName_EmptyDictionaryName__GetValue()
-        {
-            Should.NotThrow(() =>
-            {
-                CacheManager.GenerateKeyName(null, "Test").ShouldNotBeNullOrEmpty();
-            });
-        }
-
-        [Test]
-        public void GenerateKeyName_EmptyKey__GetValue()
-        {
-            Should.NotThrow(() =>
-            {
-                CacheManager.GenerateKeyName("Test", null).ShouldNotBeNullOrEmpty();
-            });
-        }
-
-        [Test]
-        public void GenerateKeyName__GetValue()
-        {
-            Should.NotThrow(() =>
-            {
-                CacheManager.GenerateKeyName("Test", "Test").ShouldNotBeNullOrEmpty();
-            });
-        }
-
-        [Test]
-        public void GenerateKeyNameForGetAllDictionary_EmptyDictionaryName__GetValue()
-        {
-            Should.NotThrow(() =>
-            {
-                CacheManager.GenerateKeyNameForGetAllDictionary(null).ShouldNotBeNullOrEmpty();
-            });
-        }
-
-        [Test]
-        public void GenerateKeyNameForGetAllDictionary__GetValue()
-        {
-            Should.NotThrow(() =>
-            {
-                CacheManager.GenerateKeyNameForGetAllDictionary("Test").ShouldNotBeNullOrEmpty();
             });
         }
     }

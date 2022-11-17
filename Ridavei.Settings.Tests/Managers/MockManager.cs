@@ -10,7 +10,7 @@ namespace Ridavei.Settings.Tests.Managers
 
         protected override ASettings GetSettingsObject(string dictionaryName)
         {
-            return new MockSettings(dictionaryName, UseCache, CacheTimeout);
+            return new MockSettings(dictionaryName);
         }
     }
 }

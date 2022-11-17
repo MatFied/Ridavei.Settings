@@ -106,12 +106,30 @@ namespace Ridavei.Settings.Tests
         }
 
         [Test]
-        public void GetSettings_UseTheSameDictionaryName__GetTheSameObject()
+        public void GetSettings_UseTheSameDictionaryName__GetDifferentObjects()
         {
             Should.NotThrow(() =>
             {
                 using (var manager = new MockManager())
                 {
+                    var settings = manager.GetSettings(DictionaryName);
+                    settings.ShouldNotBeNull();
+                    var settingsToCompare = manager.GetSettings(DictionaryName);
+                    settingsToCompare.ShouldNotBeNull();
+                    settingsToCompare.ShouldNotBe(settings);
+                }
+            });
+        }
+
+        [Test]
+        public void GetSettings_UseCache_UseTheSameDictionaryName__GetTheSameObject()
+        {
+            Should.NotThrow(() =>
+            {
+                using (var manager = new MockManager())
+                {
+                    manager.Init(true, 100);
+
                     var settings = manager.GetSettings(DictionaryName);
                     settings.ShouldNotBeNull();
                     var settingsToCompare = manager.GetSettings(DictionaryName);

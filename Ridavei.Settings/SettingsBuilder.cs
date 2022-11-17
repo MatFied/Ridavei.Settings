@@ -10,7 +10,7 @@ namespace Ridavei.Settings
     /// <summary>
     /// Builder to receive settings.
     /// </summary>
-    public class SettingsBuilder : IDisposable
+    public sealed class SettingsBuilder : IDisposable
     {
         private bool _useCache;
         private int _cacheTimeout = Consts.DefaultCacheTimeout;
@@ -28,13 +28,12 @@ namespace Ridavei.Settings
         private SettingsBuilder() { }
 
         /// <summary>
-        /// Sets the flag if to cache settings objects.
+        /// Enables to cache settings objects.
         /// </summary>
-        /// <param name="use"></param>
         /// <returns>Builder</returns>
-        public SettingsBuilder SetCache(bool use)
+        public SettingsBuilder EnableCache()
         {
-            _useCache = use;
+            _useCache = true;
             return this;
         }
 
@@ -43,8 +42,11 @@ namespace Ridavei.Settings
         /// </summary>
         /// <param name="cacheItemTimeout">Timeout for the cache in seconds</param>
         /// <returns>Builder</returns>
+        /// <exception cref="ArgumentException">Throwed when the cache timeout value is lower then <see cref="Consts.MinCacheTimeout"/>.</exception>
         public SettingsBuilder SetCacheTimeout(int cacheItemTimeout)
         {
+            if (cacheItemTimeout < Consts.MinCacheTimeout)
+                throw new ArgumentException($"The cache timeout cannot be lower then {Consts.MinCacheTimeout}.", nameof(cacheItemTimeout));
             _cacheTimeout = cacheItemTimeout;
             return this;
         }
@@ -72,12 +74,12 @@ namespace Ridavei.Settings
         /// </summary>
         /// <param name="dictionaryName">Name of the dictionary</param>
         /// <exception cref="ArgumentNullException">Throwed when the name of the dictionary is null, empty or whitespace.</exception>
-        /// <exception cref="ManagerNotExistsException">Throwed when the manager object was not initialized.</exception>
+        /// <exception cref="ManagerNotExistsException">Throwed when the manager object was not added.</exception>
         /// <returns>Settings</returns>
         public ISettings GetSettings(string dictionaryName)
         {
             if (string.IsNullOrWhiteSpace(dictionaryName))
-                throw new ArgumentNullException(nameof(dictionaryName), "The name of the dictionary can not be null or empty or whitespace.");
+                throw new ArgumentNullException(nameof(dictionaryName), "The name of the dictionary cannot be null or empty or whitespace.");
             if (_manager == null)
                 throw new ManagerNotExistsException();
             _manager.Init(_useCache, _cacheTimeout);
@@ -90,12 +92,19 @@ namespace Ridavei.Settings
         public void Dispose()
         {
             DisposeManager();
+            GC.SuppressFinalize(this);
         }
 
+        /// <summary>
+        /// Releases the <see cref="AManager"/> object if it exists.
+        /// </summary>
         private void DisposeManager()
         {
             if (_manager != null)
+            {
                 _manager.Dispose();
+                _manager = null;
+            }
         }
     }
 }

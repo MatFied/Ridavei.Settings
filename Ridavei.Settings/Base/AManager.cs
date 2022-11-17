@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
+using Ridavei.Settings.Cache;
 using Ridavei.Settings.Interface;
 
 namespace Ridavei.Settings.Base
@@ -10,7 +11,7 @@ namespace Ridavei.Settings.Base
     /// </summary>
     public abstract class AManager : IDisposable
     {
-        private readonly Dictionary<string, ASettings> _dictionaries = new Dictionary<string, ASettings>();
+        private readonly List<string> _cachedSettingsList = new List<string>();
         private bool _initialized = false;
 
         /// <summary>
@@ -22,6 +23,18 @@ namespace Ridavei.Settings.Base
         /// Timeout for the cache in seconds.
         /// </summary>
         public int CacheTimeout { get; private set; }
+
+        /// <summary>
+        /// Releases all resources used by the Manager object.
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            if (UseCache)
+                foreach (var cachedSettingsName in _cachedSettingsList)
+                    CacheManager.Remove(KeyGenerator.GenerateForDictionary(cachedSettingsName));
+            GC.SuppressFinalize(this);
+        }
 
         /// <summary>
         /// Initializes values for the manager.
@@ -39,7 +52,8 @@ namespace Ridavei.Settings.Base
         }
 
         /// <summary>
-        /// Retrieves the <see cref="ISettings"/> object for the specifed dictionary name. Settings objects are stored in a <see cref="Dictionary{TKey, TValue}"/>.
+        /// Retrieves the <see cref="ISettings"/> object for the specifed dictionary name.<para />
+        /// Settings objects are stored in cache if caching was in the <see cref="SettingsBuilder"/> enabled.
         /// </summary>
         /// <param name="dictionaryName">Name of the dictionary</param>
         /// <returns>Settings</returns>
@@ -47,12 +61,10 @@ namespace Ridavei.Settings.Base
         internal ISettings GetSettings(string dictionaryName)
         {
             if (string.IsNullOrWhiteSpace(dictionaryName))
-                throw new ArgumentNullException(nameof(dictionaryName), "The name of the dictionary can not be null or empty or whitespace.");
-            if (!_dictionaries.TryGetValue(dictionaryName, out var res))
-            {
-                res = GetSettingsObject(dictionaryName);
-                _dictionaries.Add(dictionaryName, res);
-            }
+                throw new ArgumentNullException(nameof(dictionaryName), "The name of the dictionary cannot be null or empty or whitespace.");
+            var res = UseCache ? GetCachedSettings(dictionaryName) : GetSettingsObject(dictionaryName);
+            res.Init(UseCache, CacheTimeout);
+
             return res;
         }
 
@@ -64,12 +76,29 @@ namespace Ridavei.Settings.Base
         protected abstract ASettings GetSettingsObject(string dictionaryName);
 
         /// <summary>
-        /// Releases all resources used by the Manager object.
+        /// Releases all resources used by the derived Manager object.
         /// </summary>
-        public virtual void Dispose()
+        /// <param name="disposing"></param>
+        protected virtual void Dispose(bool disposing) { }
+
+        /// <summary>
+        /// Returns the cached <see cref="ISettings"/> object if it exists in the cache.<para />
+        /// If not it's run the basic method to get the <see cref="ISettings"/> and stores it in the cache.
+        /// </summary>
+        /// <param name="dictionaryName">Name of the dictionary</param>
+        /// <returns>Settings</returns>
+        private ASettings GetCachedSettings(string dictionaryName)
         {
-            foreach (var dictionary in _dictionaries)
-                dictionary.Value.Dispose();
+            var genKey = KeyGenerator.GenerateForDictionary(dictionaryName);
+            var res = CacheManager.Get(genKey) as ASettings;
+            if (res == null)
+            {
+                res = GetSettingsObject(dictionaryName);
+                if (res != null)
+                    CacheManager.Add(genKey, res, EvictPolicyGenerator.GetAbsoluteExpirationTime(CacheTimeout));
+            }
+            _cachedSettingsList.Add(dictionaryName);
+            return res;
         }
     }
 }

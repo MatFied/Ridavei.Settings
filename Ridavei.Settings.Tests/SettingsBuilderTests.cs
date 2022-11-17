@@ -66,12 +66,22 @@ namespace Ridavei.Settings.Tests
         }
 
         [Test]
-        public void SetCache__NoException()
+        public void EnableCache__NoException()
         {
             Should.NotThrow(() =>
             {
                 using (var settings = SettingsBuilder.CreateBuilder())
-                    settings.SetCache(true);
+                    settings.EnableCache();
+            });
+        }
+
+        [Test]
+        public void SetCacheTimeout_BelowMinimumValue__RaisesException()
+        {
+            Should.Throw<ArgumentException>(() =>
+            {
+                using (var settings = SettingsBuilder.CreateBuilder())
+                    settings.SetCacheTimeout(-100);
             });
         }
 

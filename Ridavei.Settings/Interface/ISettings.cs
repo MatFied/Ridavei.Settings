@@ -17,11 +17,19 @@ namespace Ridavei.Settings.Interface
         void Set(string key, string value);
 
         /// <summary>
-        /// Gets the value for the specific key or throws an <see cref="Exception"/> when not found.
+        /// Sets the values for the keys and if UseCache is true stores them in the cache.
+        /// </summary>
+        /// <param name="keyValues">Settings keys and values</param>
+        /// <exception cref="ArgumentNullException">Throwed when the key or value are null, empty or whitespace.</exception>
+        void Set(IDictionary<string, string> keyValues);
+
+        /// <summary>
+        /// Gets the value for the specific key or throws a <see cref="KeyNotFoundException"/> when not found.
         /// </summary>
         /// <param name="key">Settings key</param>
         /// <returns></returns>
         /// <exception cref="ArgumentNullException">Throwed when the key is null, empty or whitespace.</exception>
+        /// <exception cref="KeyNotFoundException">Throwed when the key was not found.</exception>
         string Get(string key);
 
         /// <summary>
@@ -32,7 +40,6 @@ namespace Ridavei.Settings.Interface
         /// <returns></returns>
         /// <exception cref="ArgumentNullException">Throwed when the key is null, empty or whitespace.</exception>
         string Get(string key, string defaultValue);
-
 
         /// <summary>
         /// Retrieves all elements for the dictionary.
