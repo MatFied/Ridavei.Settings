@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 
 using Ridavei.Settings.Cache;
+using Ridavei.Settings.Exceptions;
 using Ridavei.Settings.Interface;
 
 namespace Ridavei.Settings.Base
@@ -87,6 +88,8 @@ namespace Ridavei.Settings.Base
                 throw new ArgumentNullException(nameof(dictionaryName), "The name of the dictionary cannot be null or empty or whitespace.");
             ASettings res;
             var exists = UseCache ? TryGetCachedSettings(dictionaryName, out res) : TryGetSettingsObject(dictionaryName, out res);
+            if (!exists)
+                throw new DictionaryNotFoundException(dictionaryName);
             res.Init(UseCache, CacheTimeout);
 
             return res;
