@@ -4,11 +4,11 @@ using Ridavei.Settings.Base;
 
 namespace Ridavei.Settings.Tests.Settings
 {
-    internal class MockSettings : ASettings
+    public class MockSettings : ASettings
     {
         public bool ReturnValue = true;
 
-        public MockSettings(string dictionaryName, bool useCache, int cacheTimeout) : base(dictionaryName, useCache, cacheTimeout) { }
+        public MockSettings(string dictionaryName) : base(dictionaryName) { }
 
         protected override IReadOnlyDictionary<string, string> GetAllValues()
         {

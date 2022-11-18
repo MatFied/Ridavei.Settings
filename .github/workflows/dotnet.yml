@@ -3,7 +3,7 @@ name: .NET
 on:
   push:
     branches: [ main ]
-    tags: v1.*
+    tags: v2.*
     paths-ignore:
     - 'README.md'
 

@@ -1,7 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Runtime.Caching;
 
+using Ridavei.Settings.Exceptions;
 using Ridavei.Settings.Tests.Managers;
 
 using NUnit.Framework;
@@ -19,11 +18,9 @@ namespace Ridavei.Settings.Tests
         {
             Should.NotThrow(() =>
             {
-                using (var manager = new MockManager())
-                {
-                    manager.UseCache.ShouldBe(false);
-                    manager.CacheTimeout.ShouldBe(0);
-                }
+                var manager = new MockManager(true, true);
+                manager.UseCache.ShouldBe(false);
+                manager.CacheTimeout.ShouldBe(0);
             });
         }
 
@@ -34,12 +31,10 @@ namespace Ridavei.Settings.Tests
             {
                 var useCache = true;
                 var cacheTimeout = 50;
-                using (var manager = new MockManager())
-                {
-                    manager.Init(useCache, cacheTimeout);
-                    manager.UseCache.ShouldBe(useCache);
-                    manager.CacheTimeout.ShouldBe(cacheTimeout);
-                }
+                var manager = new MockManager(true, true);
+                manager.Init(useCache, cacheTimeout);
+                manager.UseCache.ShouldBe(useCache);
+                manager.CacheTimeout.ShouldBe(cacheTimeout);
             });
         }
 
@@ -50,15 +45,13 @@ namespace Ridavei.Settings.Tests
             {
                 var useCache = true;
                 var cacheTimeout = 50;
-                using (var manager = new MockManager())
-                {
-                    manager.Init(useCache, cacheTimeout);
-
-                    for (int i = 0; i < 10; i++)
-                        manager.Init(i % 2 == 1, i);
-                    manager.UseCache.ShouldBe(useCache);
-                    manager.CacheTimeout.ShouldBe(cacheTimeout);
-                }
+                var manager = new MockManager(true, true);
+                manager.Init(useCache, cacheTimeout);
+                
+                for (int i = 0; i < 10; i++)
+                    manager.Init(i % 2 == 1, i);
+                manager.UseCache.ShouldBe(useCache);
+                manager.CacheTimeout.ShouldBe(cacheTimeout);
             });
         }
 
@@ -67,8 +60,8 @@ namespace Ridavei.Settings.Tests
         {
             Should.Throw<ArgumentNullException>(() =>
             {
-                using (var manager = new MockManager())
-                    manager.GetSettings(null);
+                var manager = new MockManager(true, true);
+                manager.GetSettings(null);
             });
         }
 
@@ -77,8 +70,8 @@ namespace Ridavei.Settings.Tests
         {
             Should.Throw<ArgumentNullException>(() =>
             {
-                using (var manager = new MockManager())
-                    manager.GetSettings("");
+                var manager = new MockManager(true, true);
+                manager.GetSettings("");
             });
         }
 
@@ -87,34 +80,145 @@ namespace Ridavei.Settings.Tests
         {
             Should.Throw<ArgumentNullException>(() =>
             {
-                using (var manager = new MockManager())
-                    manager.GetSettings("     ");
+                var manager = new MockManager(true, true);
+                manager.GetSettings("     ");
             });
         }
 
         [Test]
-        public void GetSettings__GetObject()
+        public void GetSettings_ExistingSettings__GetObject()
         {
             Should.NotThrow(() =>
             {
-                using (var manager = new MockManager())
-                {
-                    var settings = manager.GetSettings(DictionaryName);
+                var manager = new MockManager(true, true);
+                using (var settings = manager.GetSettings(DictionaryName))
                     settings.ShouldNotBeNull();
+            });
+        }
+
+        [Test]
+        public void GetSettings_NonExistingSettings__RaisesException()
+        {
+            Should.Throw<DictionaryNotFoundException>(() =>
+            {
+                var manager = new MockManager(true, false);
+                var settings = manager.GetSettings(DictionaryName);
+            });
+        }
+
+        [Test]
+        public void GetSettings_UseTheSameDictionaryName__GetDifferentObjects()
+        {
+            Should.NotThrow(() =>
+            {
+                var manager = new MockManager(true, true);
+                using (var settings = manager.GetSettings(DictionaryName))
+                {
+                    settings.ShouldNotBeNull();
+                    var settingsToCompare = manager.GetSettings(DictionaryName);
+                    settingsToCompare.ShouldNotBeNull();
+                    settingsToCompare.ShouldNotBe(settings);
                 }
             });
         }
 
         [Test]
-        public void GetSettings_UseTheSameDictionaryName__GetTheSameObject()
+        public void GetSettings_UseCache_UseTheSameDictionaryName__GetTheSameObject()
         {
             Should.NotThrow(() =>
             {
-                using (var manager = new MockManager())
+                var manager = new MockManager(true, true);
+                manager.Init(true, 100);
+
+                using (var settings = manager.GetSettings(DictionaryName))
                 {
-                    var settings = manager.GetSettings(DictionaryName);
                     settings.ShouldNotBeNull();
                     var settingsToCompare = manager.GetSettings(DictionaryName);
+                    settingsToCompare.ShouldNotBeNull();
+                    settingsToCompare.ShouldBe(settings);
+                }
+            });
+        }
+
+        [Test]
+        public void GetOrCreateSettings_NullDictionaryName__RaisesException()
+        {
+            Should.Throw<ArgumentNullException>(() =>
+            {
+                var manager = new MockManager(true, true);
+                manager.GetOrCreateSettings(null);
+            });
+        }
+
+        [Test]
+        public void GetOrCreateSettings_EmptyDictionaryName__RaisesException()
+        {
+            Should.Throw<ArgumentNullException>(() =>
+            {
+                var manager = new MockManager(true, true);
+                manager.GetOrCreateSettings("");
+            });
+        }
+
+        [Test]
+        public void GetOrCreateSettings_WhitespaceDictionaryName__RaisesException()
+        {
+            Should.Throw<ArgumentNullException>(() =>
+            {
+                var manager = new MockManager(true, true);
+                manager.GetOrCreateSettings("     ");
+            });
+        }
+
+        [Test]
+        public void GetOrCreateSettings_ExistingSettings__GetObject()
+        {
+            Should.NotThrow(() =>
+            {
+                var manager = new MockManager(true, true);
+                using (var settings = manager.GetOrCreateSettings(DictionaryName))
+                    settings.ShouldNotBeNull();
+            });
+        }
+
+        [Test]
+        public void GetOrCreateSettings_CannotCreateSettings__RaisesException()
+        {
+            Should.Throw<Exception>(() =>
+            {
+                var manager = new MockManager(false, false);
+                var settings = manager.GetOrCreateSettings(DictionaryName);
+            });
+        }
+
+        [Test]
+        public void GetOrCreateSettings_UseTheSameDictionaryName__GetDifferentObjects()
+        {
+            Should.NotThrow(() =>
+            {
+                var manager = new MockManager(true, false);
+                using (var settings = manager.GetOrCreateSettings(DictionaryName))
+                {
+                    settings.ShouldNotBeNull();
+                    var settingsToCompare = manager.GetOrCreateSettings(DictionaryName);
+                    settingsToCompare.ShouldNotBeNull();
+                    settingsToCompare.ShouldNotBe(settings);
+                }
+            });
+        }
+
+        [Test]
+        public void GetOrCreateSettings_UseCache_UseTheSameDictionaryName__GetTheSameObject()
+        {
+            Should.NotThrow(() =>
+            {
+                var manager = new MockManager(true, false);
+                manager.Init(true, 100);
+
+                using (var settings = manager.GetOrCreateSettings(DictionaryName))
+                {
+                    settings.ShouldNotBeNull();
+                    var settingsToCompare = manager.GetOrCreateSettings(DictionaryName);
                     settingsToCompare.ShouldNotBeNull();
                     settingsToCompare.ShouldBe(settings);
                 }

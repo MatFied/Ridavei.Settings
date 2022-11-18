@@ -1,17 +1,18 @@
 ﻿using System;
-using System.Collections.Generic;
 
-using Ridavei.Settings.Interface;
+using Ridavei.Settings.Cache;
+using Ridavei.Settings.Exceptions;
 
 namespace Ridavei.Settings.Base
 {
     /// <summary>
-    /// Abstract manager class to help retrieve <see cref="ISettings"/>.
+    /// Abstract manager class to help retrieve <see cref="ASettings"/>.
     /// </summary>
-    public abstract class AManager : IDisposable
+    public abstract class AManager
     {
-        private readonly Dictionary<string, ASettings> _dictionaries = new Dictionary<string, ASettings>();
         private bool _initialized = false;
+
+        private static readonly object _lock = new object();
 
         /// <summary>
         /// Defines if the manager or settings class should use cache.
@@ -19,7 +20,7 @@ namespace Ridavei.Settings.Base
         public bool UseCache { get; private set; }
 
         /// <summary>
-        /// Timeout for the cache in seconds.
+        /// Timeout for the cache in milliseconds.
         /// </summary>
         public int CacheTimeout { get; private set; }
 
@@ -27,7 +28,7 @@ namespace Ridavei.Settings.Base
         /// Initializes values for the manager.
         /// </summary>
         /// <param name="useCache">Defines if the manager or settings class should use cache</param>
-        /// <param name="cacheTimeout">Timeout for the cache in seconds</param>
+        /// <param name="cacheTimeout">Timeout for the cache in milliseconds</param>
         internal void Init(bool useCache, int cacheTimeout)
         {
             if (_initialized)
@@ -39,37 +40,86 @@ namespace Ridavei.Settings.Base
         }
 
         /// <summary>
-        /// Retrieves the <see cref="ISettings"/> object for the specifed dictionary name. Settings objects are stored in a <see cref="Dictionary{TKey, TValue}"/>.
+        /// Retrieves the <see cref="ASettings"/> object for the specifed dictionary name.<para />
+        /// Settings objects are stored in cache if caching was in the <see cref="SettingsBuilder"/> enabled.
         /// </summary>
         /// <param name="dictionaryName">Name of the dictionary</param>
         /// <returns>Settings</returns>
         /// <exception cref="ArgumentNullException">Throwed when the name of the dictionary is null, empty or whitespace.</exception>
-        internal ISettings GetSettings(string dictionaryName)
+        internal ASettings GetSettings(string dictionaryName)
         {
             if (string.IsNullOrWhiteSpace(dictionaryName))
-                throw new ArgumentNullException(nameof(dictionaryName), "The name of the dictionary can not be null or empty or whitespace.");
-            if (!_dictionaries.TryGetValue(dictionaryName, out var res))
-            {
-                res = GetSettingsObject(dictionaryName);
-                _dictionaries.Add(dictionaryName, res);
-            }
+                throw new ArgumentNullException(nameof(dictionaryName), "The name of the dictionary cannot be null or empty or whitespace.");
+            ASettings res;
+            var exists = UseCache ? TryGetCachedSettings(dictionaryName, out res) : TryGetSettingsObject(dictionaryName, out res);
+            if (!exists)
+                throw new DictionaryNotFoundException(dictionaryName);
+            res.Init(UseCache, CacheTimeout);
+
             return res;
         }
 
         /// <summary>
-        /// Retrieves the <see cref="ISettings"/> object for the specifed dictionary name.
+        /// Retrieves or creates the <see cref="ASettings"/> object for the specifed dictionary name.<para />
+        /// Settings objects are stored in cache if caching was in the <see cref="SettingsBuilder"/> enabled.
         /// </summary>
         /// <param name="dictionaryName">Name of the dictionary</param>
         /// <returns>Settings</returns>
-        protected abstract ASettings GetSettingsObject(string dictionaryName);
+        /// <exception cref="ArgumentNullException">Throwed when the name of the dictionary is null, empty or whitespace.</exception>
+        internal ASettings GetOrCreateSettings(string dictionaryName)
+        {
+            if (string.IsNullOrWhiteSpace(dictionaryName))
+                throw new ArgumentNullException(nameof(dictionaryName), "The name of the dictionary cannot be null or empty or whitespace.");
+
+            lock (_lock)
+            {
+                var exists = UseCache ? TryGetCachedSettings(dictionaryName, out var res) : TryGetSettingsObject(dictionaryName, out res);
+                if (!exists)
+                {
+                    res = CreateSettingsObject(dictionaryName);
+                    if (UseCache)
+                        CacheManager.Add(KeyGenerator.GenerateForDictionary(dictionaryName), res, EvictPolicyGenerator.GetAbsoluteExpirationTime(CacheTimeout));
+                }
+                return res;
+            }
+        }
 
         /// <summary>
-        /// Releases all resources used by the Manager object.
+        /// Retrieves the <see cref="ASettings"/> object for the specifed dictionary name.
         /// </summary>
-        public virtual void Dispose()
+        /// <param name="dictionaryName">Name of the dictionary</param>
+        /// <param name="settings">Retrieved Settings</param>
+        /// <returns>True if the Settings exists or false if not.</returns>
+        protected abstract bool TryGetSettingsObject(string dictionaryName, out ASettings settings);
+
+        /// <summary>
+        /// Creates the <see cref="ASettings"/> object for the specifed dictionary name.
+        /// </summary>
+        /// <param name="dictionaryName">Name of the dictionary</param>
+        /// <returns>Settings</returns>
+        protected abstract ASettings CreateSettingsObject(string dictionaryName);
+
+        /// <summary>
+        /// Returns the cached <see cref="ASettings"/> object if it exists in the cache.<para />
+        /// If not it's run the basic method to get the <see cref="ASettings"/> and stores it in the cache.
+        /// </summary>
+        /// <param name="dictionaryName">Name of the dictionary</param>
+        /// <param name="settings">Retrieved Settings</param>
+        /// <returns>True if the Settings exists or false if not.</returns>
+        private bool TryGetCachedSettings(string dictionaryName, out ASettings settings)
         {
-            foreach (var dictionary in _dictionaries)
-                dictionary.Value.Dispose();
+            var genKey = KeyGenerator.GenerateForDictionary(dictionaryName);
+            settings = CacheManager.Get(genKey) as ASettings;
+            if (settings == null)
+            {
+                lock (_lock)
+                {
+                    if (!TryGetSettingsObject(dictionaryName, out settings))
+                        return false;
+                    CacheManager.Add(genKey, settings, EvictPolicyGenerator.GetAbsoluteExpirationTime(CacheTimeout));
+                }
+            }
+            return true;
         }
     }
 }

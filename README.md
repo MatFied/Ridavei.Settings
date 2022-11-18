@@ -3,8 +3,8 @@
 ## What is Settings?
 
 Ridavei.Settings is a cross-platform library created to ease getting and setting values in settings manager.\
-For caching it uses [MemoryCache.Default](https://docs.microsoft.com/pl-pl/dotnet/api/system.runtime.caching.memorycache.default).\
-Classes implement the [IDisposable](https://docs.microsoft.com/pl-pl/dotnet/api/system.idisposable) interface to dispose objects that are created by the extensions.
+For caching it uses [MemoryCache](https://learn.microsoft.com/pl-pl/dotnet/api/system.runtime.caching.memorycache).\
+Classes implement the [IDisposable](https://learn.microsoft.com/pl-pl/dotnet/api/system.idisposable) interface to dispose objects that are created by the extensions.
 
 ## Examples in using Settings
 
@@ -19,12 +19,11 @@ namespace TestProgram
     {
         public static void Main(string[] args)
         {
-            using (SettingsBuilder settingsBuilder = SettingsBuilder.CreateBuilder())
+            SettingsBuilder settingsBuilder = SettingsBuilder
+                .CreateBuilder()
+                .SetManager(YOUR_MANAGER_CLASS); //The manager class will be disposed by the SettingsBuilder.
+            using (ISettings settings = settingsBuilder.GetSettings("DictionaryName"))
             {
-                ISettings settings = settingsBuilder
-                    .SetManager(YOUR_MANAGER_CLASS) //The manager class will be disposed by the SettingsBuilder.
-                    .GetSettings("DictionaryName");
-
                 //You can use settings.Get("ExampleKey", "DefaultValue") if you want to retrieve the default value if the key doesn't exists.
                 string value = settings.Get("ExampleKey");
                 settings.Set("AnotherKey", "NewValue");
@@ -46,12 +45,11 @@ namespace TestProgram
     {
         public static void Main(string[] args)
         {
-            using (SettingsBuilder settingsBuilder = SettingsBuilder.CreateBuilder())
+            SettingsBuilder settingsBuilder = SettingsBuilder
+                .CreateBuilder()
+                .SetManager(YOUR_MANAGER_CLASS); //The manager class will be disposed by the SettingsBuilder.
+            using (ISettings settings = settingsBuilder.GetSettings("DictionaryName"))
             {
-                ISettings settings = settingsBuilder
-                    .SetManager(YOUR_MANAGER_CLASS) //The manager class will be disposed by the SettingsBuilder.
-                    .GetSettings("DictionaryName");
-                    
                 //Returns the IReadOnlyDictionary to prevent from value changing.
                 IReadOnlyDictionary<string, string> dict = settings.GetAll();
             }
