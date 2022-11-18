@@ -2,14 +2,13 @@
 using System.Collections.Generic;
 
 using Ridavei.Settings.Cache;
-using Ridavei.Settings.Interface;
 
 namespace Ridavei.Settings.Base
 {
     /// <summary>
     /// Abstract class for the settings classes. It can retrieve and set objects in the settings.
     /// </summary>
-    public abstract class ASettings : ISettings, IDisposable
+    public abstract class ASettings : IDisposable
     {
         private bool _initialized = false;
 
@@ -26,7 +25,7 @@ namespace Ridavei.Settings.Base
         public bool UseCache { get; private set; }
 
         /// <summary>
-        /// Timeout for the cache in seconds.
+        /// Timeout for the cache in milliseconds.
         /// </summary>
         public int CacheTimeout { get; private set; }
 
@@ -51,7 +50,12 @@ namespace Ridavei.Settings.Base
             GC.SuppressFinalize(this);
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Sets the value for the specific key and if UseCache is true stores it in the cache.
+        /// </summary>
+        /// <param name="key">Settings key</param>
+        /// <param name="value">New value stored in the settings</param>
+        /// <exception cref="ArgumentNullException">Throwed when the key or value are null, empty or whitespace.</exception>
         public void Set(string key, string value)
         {
             if (string.IsNullOrWhiteSpace(key))
@@ -66,14 +70,24 @@ namespace Ridavei.Settings.Base
             }
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Sets the values for the keys and if UseCache is true stores them in the cache.
+        /// </summary>
+        /// <param name="keyValues">Settings keys and values</param>
+        /// <exception cref="ArgumentNullException">Throwed when the key or value are null, empty or whitespace.</exception>
         public void Set(IDictionary<string, string> keyValues)
         {
             foreach (var kvp in keyValues)
                 Set(kvp.Key, kvp.Value);
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Gets the value for the specific key or throws a <see cref="KeyNotFoundException"/> when not found.
+        /// </summary>
+        /// <param name="key">Settings key</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException">Throwed when the key is null, empty or whitespace.</exception>
+        /// <exception cref="KeyNotFoundException">Throwed when the key was not found.</exception>
         public string Get(string key)
         {
             if (string.IsNullOrWhiteSpace(key))
@@ -84,7 +98,13 @@ namespace Ridavei.Settings.Base
             return val;
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Gets the value for the specific key if found, else return the default value.
+        /// </summary>
+        /// <param name="key">Settings key</param>
+        /// <param name="defaultValue">Default value that will be returned when the key was not found</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException">Throwed when the key is null, empty or whitespace.</exception>
         public string Get(string key, string defaultValue)
         {
             if (string.IsNullOrWhiteSpace(key))
@@ -95,7 +115,10 @@ namespace Ridavei.Settings.Base
             return val;
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Retrieves all elements for the dictionary.
+        /// </summary>
+        /// <returns>Dictionary of keys and values.</returns>
         public IReadOnlyDictionary<string, string> GetAll()
         {
             return UseCache ? GetAllFromCache() : GetAllValues();
@@ -105,7 +128,7 @@ namespace Ridavei.Settings.Base
         /// Initializes values for the settings.
         /// </summary>
         /// <param name="useCache">Defines if the settings class should use cache</param>
-        /// <param name="cacheTimeout">Timeout for the cache in seconds</param>
+        /// <param name="cacheTimeout">Timeout for the cache in milliseconds</param>
         internal void Init(bool useCache, int cacheTimeout)
         {
             if (_initialized)

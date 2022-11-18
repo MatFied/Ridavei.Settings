@@ -1,6 +1,7 @@
 ﻿using System;
 
 using Ridavei.Settings.Exceptions;
+using Ridavei.Settings.Internals;
 
 using Ridavei.Settings.Tests.Managers;
 
@@ -17,8 +18,8 @@ namespace Ridavei.Settings.Tests
         {
             Should.NotThrow(() =>
             {
-                using (var settings = SettingsBuilder.CreateBuilder())
-                    settings.ShouldNotBeNull();
+                var builder = SettingsBuilder.CreateBuilder();
+                builder.ShouldNotBeNull();
             });
         }
 
@@ -27,8 +28,8 @@ namespace Ridavei.Settings.Tests
         {
             Should.Throw<ArgumentNullException>(() =>
             {
-                using (var settings = SettingsBuilder.CreateBuilder())
-                    settings.SetManager(null);
+                var builder = SettingsBuilder.CreateBuilder();
+                builder.SetManager(null);
             });
         }
 
@@ -37,8 +38,8 @@ namespace Ridavei.Settings.Tests
         {
             Should.Throw<ArgumentNullException>(() =>
             {
-                using (var settings = SettingsBuilder.CreateBuilder())
-                    settings.GetSettings(null);
+                var builder = SettingsBuilder.CreateBuilder();
+                builder.GetSettings(null);
             });
         }
 
@@ -47,21 +48,54 @@ namespace Ridavei.Settings.Tests
         {
             Should.Throw<ManagerNotExistsException>(() =>
             {
-                using (var settings = SettingsBuilder.CreateBuilder())
-                    settings.GetSettings("test");
+                var builder = SettingsBuilder.CreateBuilder();
+                builder.GetSettings("test");
             });
         }
 
         [Test]
-        public void GetSettings_InMemoryManager__RetrieveSettings()
+        public void GetSettings_MockManager__RetrieveSettings()
         {
             Should.NotThrow(() =>
             {
-                using (var settings = SettingsBuilder.CreateBuilder())
-                    settings
-                        .SetManager(new MockManager())
-                        .GetSettings("test")
-                        .ShouldNotBeNull();
+                var builder = SettingsBuilder
+                    .CreateBuilder()
+                    .SetManager(new MockManager(true, true));
+                using (var settings = builder.GetSettings("test"))
+                    settings.ShouldNotBeNull();
+            });
+        }
+
+        [Test]
+        public void GetOrCreateSettings_DictionaryNameNull__RaisesException()
+        {
+            Should.Throw<ArgumentNullException>(() =>
+            {
+                var builder = SettingsBuilder.CreateBuilder();
+                builder.GetOrCreateSettings(null);
+            });
+        }
+
+        [Test]
+        public void GetOrCreateSettings_ManagerNotInitialized__RaisesException()
+        {
+            Should.Throw<ManagerNotExistsException>(() =>
+            {
+                var builder = SettingsBuilder.CreateBuilder();
+                builder.GetOrCreateSettings("test");
+            });
+        }
+
+        [Test]
+        public void GetOrCreateSettings_MockManager__RetrieveSettings()
+        {
+            Should.NotThrow(() =>
+            {
+                var builder = SettingsBuilder
+                    .CreateBuilder()
+                    .SetManager(new MockManager(true, true));
+                using (var settings = builder.GetOrCreateSettings("test"))
+                    builder.ShouldNotBeNull();
             });
         }
 
@@ -70,8 +104,8 @@ namespace Ridavei.Settings.Tests
         {
             Should.NotThrow(() =>
             {
-                using (var settings = SettingsBuilder.CreateBuilder())
-                    settings.EnableCache();
+                var builder = SettingsBuilder.CreateBuilder();
+                builder.EnableCache();
             });
         }
 
@@ -80,8 +114,8 @@ namespace Ridavei.Settings.Tests
         {
             Should.Throw<ArgumentException>(() =>
             {
-                using (var settings = SettingsBuilder.CreateBuilder())
-                    settings.SetCacheTimeout(-100);
+                var builder = SettingsBuilder.CreateBuilder();
+                builder.SetCacheTimeout(-100);
             });
         }
 
@@ -90,8 +124,8 @@ namespace Ridavei.Settings.Tests
         {
             Should.NotThrow(() =>
             {
-                using (var settings = SettingsBuilder.CreateBuilder())
-                    settings.SetCacheTimeout(15);
+                var builder = SettingsBuilder.CreateBuilder();
+                builder.SetCacheTimeout(Consts.MinCacheTimeout);
             });
         }
     }

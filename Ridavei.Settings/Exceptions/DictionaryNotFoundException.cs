@@ -13,6 +13,6 @@ namespace Ridavei.Settings.Exceptions
         /// Default constructor for <see cref="ManagerNotExistsException"/>.
         /// </summary>
         /// <param name="dictionaryName">Name of the dictionary</param>
-        public DictionaryNotFoundException(string dictionaryName) : base(string.Format(ExceptionMessageFormat)) { }
+        public DictionaryNotFoundException(string dictionaryName) : base(string.Format(ExceptionMessageFormat, dictionaryName)) { }
     }
 }

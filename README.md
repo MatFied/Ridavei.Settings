@@ -19,15 +19,14 @@ namespace TestProgram
     {
         public static void Main(string[] args)
         {
-            using (SettingsBuilder settingsBuilder = SettingsBuilder.CreateBuilder()
-                .SetManager(YOUR_MANAGER_CLASS) /*The manager class will be disposed by the SettingsBuilder.*/)
+            SettingsBuilder settingsBuilder = SettingsBuilder
+                .CreateBuilder()
+                .SetManager(YOUR_MANAGER_CLASS); //The manager class will be disposed by the SettingsBuilder.
+            using (ISettings settings = settingsBuilder.GetSettings("DictionaryName"))
             {
-                using (ISettings settings = settingsBuilder.GetSettings("DictionaryName"))
-                {
-                    //You can use settings.Get("ExampleKey", "DefaultValue") if you want to retrieve the default value if the key doesn't exists.
-                    string value = settings.Get("ExampleKey");
-                    settings.Set("AnotherKey", "NewValue");
-                }
+                //You can use settings.Get("ExampleKey", "DefaultValue") if you want to retrieve the default value if the key doesn't exists.
+                string value = settings.Get("ExampleKey");
+                settings.Set("AnotherKey", "NewValue");
             }
         }
     }
@@ -46,14 +45,13 @@ namespace TestProgram
     {
         public static void Main(string[] args)
         {
-            using (SettingsBuilder settingsBuilder = SettingsBuilder.CreateBuilder()
-                .SetManager(YOUR_MANAGER_CLASS) /*The manager class will be disposed by the SettingsBuilder.*/)
+            SettingsBuilder settingsBuilder = SettingsBuilder
+                .CreateBuilder()
+                .SetManager(YOUR_MANAGER_CLASS); //The manager class will be disposed by the SettingsBuilder.
+            using (ISettings settings = settingsBuilder.GetSettings("DictionaryName"))
             {
-                using (ISettings settings = settingsBuilder.GetSettings("DictionaryName"))
-                {
-                    //Returns the IReadOnlyDictionary to prevent from value changing.
-                    IReadOnlyDictionary<string, string> dict = settings.GetAll();
-                }
+                //Returns the IReadOnlyDictionary to prevent from value changing.
+                IReadOnlyDictionary<string, string> dict = settings.GetAll();
             }
         }
     }

@@ -1,13 +1,11 @@
-﻿using System;
-using System.Runtime.Caching;
+﻿using System.Threading;
 
 using Ridavei.Settings.Cache;
 
 using NUnit.Framework;
 using Shouldly;
-using System.Threading;
 
-namespace Ridavei.Settings.Tests
+namespace Ridavei.Settings.Tests.Cache
 {
     [TestFixture]
     public class CacheManagerTests
@@ -17,10 +15,10 @@ namespace Ridavei.Settings.Tests
         {
             Should.NotThrow(() =>
             {
-                var seconds = 100;
+                var milliseconds = 1000;
                 var key = "Add__ObjectExistsInCache";
                 var expectedValue = "Test";
-                var time = EvictPolicyGenerator.GetAbsoluteExpirationTime(seconds);
+                var time = EvictPolicyGenerator.GetAbsoluteExpirationTime(milliseconds);
                 try
                 {
                     CacheManager.Add(key, expectedValue, time);
@@ -40,12 +38,12 @@ namespace Ridavei.Settings.Tests
         {
             Should.NotThrow(() =>
             {
-                var seconds = 2;
+                var milliseconds = 20;
                 var key = "Add_ExpireTime__ObjectNotExistsInCache";
                 var expectedValue = "Test";
-                var time = EvictPolicyGenerator.GetAbsoluteExpirationTime(seconds);
+                var time = EvictPolicyGenerator.GetAbsoluteExpirationTime(milliseconds);
                 CacheManager.Add(key, expectedValue, time);
-                Thread.Sleep((seconds + 1) * 1000);
+                Thread.Sleep(milliseconds + 10);
                 var val = CacheManager.Get(key);
                 val.ShouldBeNull();
             });
@@ -56,10 +54,10 @@ namespace Ridavei.Settings.Tests
         {
             Should.NotThrow(() =>
             {
-                var seconds = 100;
+                var milliseconds = 1000;
                 var key = "Get_NonExistingValue__GetNull";
                 var expectedValue = "Test";
-                var time = EvictPolicyGenerator.GetAbsoluteExpirationTime(seconds);
+                var time = EvictPolicyGenerator.GetAbsoluteExpirationTime(milliseconds);
                 try
                 {
                     CacheManager.Add(key, expectedValue, time);
@@ -81,16 +79,6 @@ namespace Ridavei.Settings.Tests
             {
                 var key = "Get_AddValueToCache__GetValue";
                 CacheManager.Get(key).ShouldBeNull();
-            });
-        }
-
-        [Test]
-        public void GetAbsoluteExpiration__GetValueFromFuture()
-        {
-            Should.NotThrow(() =>
-            {
-                var time = EvictPolicyGenerator.GetAbsoluteExpirationTime(100);
-                Assert.True(DateTimeOffset.UtcNow < time);
             });
         }
     }

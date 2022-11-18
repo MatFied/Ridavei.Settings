@@ -8,11 +8,13 @@ namespace Ridavei.Settings.Cache
         /// <summary>
         /// Generates the expire time for cached object.
         /// </summary>
-        /// <param name="cacheTimeout">Cache timeout in seconds.</param>
+        /// <param name="timeout">Timeout in milliseconds.</param>
         /// <returns></returns>
-        public static DateTimeOffset GetAbsoluteExpirationTime(int cacheTimeout)
+        public static DateTimeOffset GetAbsoluteExpirationTime(int timeout)
         {
-            return DateTimeOffset.UtcNow.AddSeconds(cacheTimeout);
+            if (timeout < 0)
+                return DateTimeOffset.UtcNow;
+            return DateTimeOffset.UtcNow.AddMilliseconds(timeout);
         }
 
         /// <summary>

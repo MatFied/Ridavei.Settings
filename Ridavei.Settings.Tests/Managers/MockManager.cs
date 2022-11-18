@@ -1,22 +1,31 @@
-﻿using Ridavei.Settings.Base;
+﻿using System;
+
+using Ridavei.Settings.Base;
 
 using Ridavei.Settings.Tests.Settings;
 
 namespace Ridavei.Settings.Tests.Managers
 {
-    internal class MockManager : AManager
+    public class MockManager : AManager
     {
-        public MockManager() : base() { }
+        private readonly bool _createSettings;
+        private readonly bool _getSettings;
+
+        public MockManager(bool createSettings, bool getSettings) : base()
+        {
+            _createSettings = createSettings;
+            _getSettings = getSettings;
+        }
 
         protected override ASettings CreateSettingsObject(string dictionaryName)
         {
-            throw new System.NotImplementedException();
+            return _createSettings ? new MockSettings(dictionaryName) : throw new Exception("Error");
         }
 
         protected override bool TryGetSettingsObject(string dictionaryName, out ASettings settings)
         {
-            settings = new MockSettings(dictionaryName);
-            return true;
+            settings = _getSettings ? new MockSettings(dictionaryName) : null;
+            return _getSettings;
         }
     }
 }

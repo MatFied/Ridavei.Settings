@@ -4,7 +4,7 @@ using Ridavei.Settings.Base;
 
 namespace Ridavei.Settings.Tests.Settings
 {
-    internal class MockSettings : ASettings
+    public class MockSettings : ASettings
     {
         public bool ReturnValue = true;
 

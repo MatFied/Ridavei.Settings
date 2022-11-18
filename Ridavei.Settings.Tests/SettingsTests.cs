@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Runtime.Caching;
+
+using Ridavei.Settings.Cache;
 
 using Ridavei.Settings.Tests.Settings;
 
 using NUnit.Framework;
 using Shouldly;
-using Ridavei.Settings.Cache;
 
 namespace Ridavei.Settings.Tests
 {
