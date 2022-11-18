@@ -44,7 +44,7 @@
 		<PackageReference Include="System.Runtime.Caching" Version="7.0.0" />
 	</ItemGroup>
 
-	<ItemGroup Condition="'$(TargetFramework)' == 'net452' OR '$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'net472' OR '$(TargetFramework)' == 'net48'">
+	<ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
 		<Reference Include="System.Runtime.Caching" />
 	</ItemGroup>
 	
