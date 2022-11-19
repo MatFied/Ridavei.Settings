@@ -109,10 +109,10 @@ namespace Ridavei.Settings.Base
         private bool TryGetCachedSettings(string dictionaryName, out ASettings settings)
         {
             var genKey = KeyGenerator.GenerateForDictionary(dictionaryName);
-            settings = CacheManager.Get(genKey) as ASettings;
-            if (settings == null)
+            lock (_lock)
             {
-                lock (_lock)
+                settings = CacheManager.Get(genKey) as ASettings;
+                if (settings == null)
                 {
                     if (!TryGetSettingsObject(dictionaryName, out settings))
                         return false;

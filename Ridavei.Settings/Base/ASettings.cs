@@ -74,9 +74,11 @@ namespace Ridavei.Settings.Base
         /// Sets the values for the keys and if UseCache is true stores them in the cache.
         /// </summary>
         /// <param name="keyValues">Settings keys and values</param>
-        /// <exception cref="ArgumentNullException">Throwed when the key or value are null, empty or whitespace.</exception>
+        /// <exception cref="ArgumentNullException">Throwed when the dictionary, key or value are null, empty or whitespace.</exception>
         public void Set(IDictionary<string, string> keyValues)
         {
+            if (keyValues == null)
+                throw new ArgumentNullException(nameof(keyValues), "The dictionary cannot be null.");
             foreach (var kvp in keyValues)
                 Set(kvp.Key, kvp.Value);
         }
@@ -173,22 +175,20 @@ namespace Ridavei.Settings.Base
         /// <summary>
         /// Tries to get the settings value from the cache.<para/>
         /// If it not exists in the cache then it tries to load it and stores it in the cache.<para/>
-        /// if the <paramref name="replaceAbsoluteExpiration"/> is true then it replaces the absolute expiration time for the settings value in the cache.
         /// </summary>
         /// <param name="key">Settings key</param>
         /// <param name="value">Retrieved settings value</param>
-        /// <param name="replaceAbsoluteExpiration">Flag to know if to replace the absolute expiration time for the object in the cache</param>
         /// <returns>True if the settings value exists or false if not.</returns>
-        private bool TryGetUsingCache(string key, out string value, bool replaceAbsoluteExpiration = false)
+        private bool TryGetUsingCache(string key, out string value)
         {
-            value = GetFromCache(key, out var genKey);
-            if (value == null || replaceAbsoluteExpiration)
+            var genKey = KeyGenerator.Generate(DictionaryName, key);
+            lock (_lock)
             {
-                lock (_lock)
+                value = CacheManager.Get(genKey) as string;
+                if (value == null)
                 {
-                    if (value == null)
-                        if (!TryGetValue(key, out value))
-                            return false;
+                    if (!TryGetValue(key, out value))
+                        return false;
                     CacheManager.Add(genKey, value, EvictPolicyGenerator.GetAbsoluteExpirationTime(CacheTimeout));
                 }
             }
@@ -198,27 +198,17 @@ namespace Ridavei.Settings.Base
         private IReadOnlyDictionary<string, string> GetAllFromCache()
         {
             var keyNameForGetAllDictionary = KeyGenerator.GenerateForGetAllDictionary(DictionaryName);
-            if (CacheManager.Get(keyNameForGetAllDictionary) is List<string> keys)
+            lock (_lock)
             {
-                Dictionary<string, string> res = new Dictionary<string, string>();
-                foreach (var key in keys)
-                {
-                    if (!TryGetUsingCache(key, out var val, true))
-                        throw new KeyNotFoundException($"The key \"{key}\" was not found");
-                    res.Add(key, val);
-                }
-                return res;
-            }
-            else
-            {
-                lock (_lock)
+                if (CacheManager.Get(keyNameForGetAllDictionary) is IReadOnlyDictionary<string, string> dict)
+                    return dict;
+                else
                 {
                     var res = GetAllValues();
-                    keys = new List<string>(res.Keys);
                     var absoluteExpiration = EvictPolicyGenerator.GetAbsoluteExpirationTime(CacheTimeout);
-                    foreach (var key in keys)
-                        AddToCache(key, res[key], absoluteExpiration);
-                    CacheManager.Add(keyNameForGetAllDictionary, keys, absoluteExpiration);
+                    foreach (var kvp in res)
+                        AddToCache(kvp.Key, kvp.Value, absoluteExpiration);
+                    CacheManager.Add(keyNameForGetAllDictionary, res, absoluteExpiration);
                     return res;
                 }
             }
@@ -233,18 +223,6 @@ namespace Ridavei.Settings.Base
         private void AddToCache(string key, string value, DateTimeOffset absoluteExpiration)
         {
             CacheManager.Add(KeyGenerator.Generate(DictionaryName, key), value, absoluteExpiration);
-        }
-
-        /// <summary>
-        /// Retrieves the settings value from cache or null if not exists.
-        /// </summary>
-        /// <param name="key">Settings key</param>
-        /// <param name="genKey"></param>
-        /// <returns>Settings value from cache or null if not exists.</returns>
-        private string GetFromCache(string key, out string genKey)
-        {
-            genKey = KeyGenerator.Generate(DictionaryName, key);
-            return CacheManager.Get(genKey) as string;
         }
 
         /// <summary>
