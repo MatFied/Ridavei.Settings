@@ -1,9 +1,11 @@
 # Ridavei.Settings
 
+### Latest release
+[![NuGet Badge Ridavei.Settings](https://buildstats.info/nuget/Ridavei.Settings)](https://www.nuget.org/packages/Ridavei.Settings)
+
 ## What is Settings?
 
 Ridavei.Settings is a cross-platform library created to ease getting and setting values in settings manager.\
-For caching it uses [MemoryCache](https://learn.microsoft.com/pl-pl/dotnet/api/system.runtime.caching.memorycache).\
 The settings class implement the [IDisposable](https://learn.microsoft.com/pl-pl/dotnet/api/system.idisposable) interface to dispose objects that are created by the extensions.
 
 ## Examples in using Settings
@@ -11,7 +13,7 @@ The settings class implement the [IDisposable](https://learn.microsoft.com/pl-pl
 ### Get settings and then change and retrieve its values.
 ```csharp
 using Ridavei.Settings;
-using Ridavei.Settings.Interface;
+using Ridavei.Settings.Base;
 
 namespace TestProgram
 {
@@ -22,7 +24,8 @@ namespace TestProgram
             SettingsBuilder settingsBuilder = SettingsBuilder
                 .CreateBuilder()
                 .SetManager(YOUR_MANAGER_CLASS);
-            using (ASettings settings = settingsBuilder.GetSettings("DictionaryName"))
+            using (ASettings settings = settingsBuilder.GetSettings("DictionaryName")
+                /*you can use the GetOrCreateSettings method if you are not sure if the settings dictionary exists*/)
             {
                 //You can use settings.Get("ExampleKey", "DefaultValue") if you want to retrieve the default value if the key doesn't exists.
                 string value = settings.Get("ExampleKey");
@@ -37,7 +40,7 @@ namespace TestProgram
 using System.Collections.Generic;
 
 using Ridavei.Settings;
-using Ridavei.Settings.Interface;
+using Ridavei.Settings.Base;
 
 namespace TestProgram
 {
@@ -48,7 +51,8 @@ namespace TestProgram
             SettingsBuilder settingsBuilder = SettingsBuilder
                 .CreateBuilder()
                 .SetManager(YOUR_MANAGER_CLASS);
-            using (ASettings settings = settingsBuilder.GetSettings("DictionaryName"))
+            using (ASettings settings = settingsBuilder.GetSettings("DictionaryName")
+                /*you can use the GetOrCreateSettings method if you are not sure if the settings dictionary exists*/)
             {
                 //Returns the IReadOnlyDictionary to prevent from value changing.
                 IReadOnlyDictionary<string, string> dict = settings.GetAll();
@@ -57,8 +61,43 @@ namespace TestProgram
     }
 }
 ```
+### Changing a set of keys.
+```csharp
+using System.Collections.Generic;
+
+using Ridavei.Settings;
+using Ridavei.Settings.Base;
+
+namespace TestProgram
+{
+    class Program
+    {
+        public static void Main(string[] args)
+        {
+            Dictionary<string, string> newValues = new Dictionary<string, string>();
+            newValues.Add("NewKey1", "NewValue1");
+            
+            SettingsBuilder settingsBuilder = SettingsBuilder
+                .CreateBuilder()
+                .SetManager(YOUR_MANAGER_CLASS);
+            using (ASettings settings = settingsBuilder.GetSettings("DictionaryName")
+                /*you can use the GetOrCreateSettings method if you are not sure if the settings dictionary exists*/)
+            {
+                settings.Set(newValues);
+            }
+        }
+    }
+}
 ```
-### To use the cache for storing the settings values you can use use the 'EnableCache' method.
+
+## Caching
+
+For caching it uses [MemoryCache](https://learn.microsoft.com/pl-pl/dotnet/api/system.runtime.caching.memorycache).\
+To use the cache for storing the settings values you can use the `EnableCache` method.
 ```csharp
 builder.EnableCache();
+```
+You can also change the timeout for the cache (default is 15 minutes) by using `SetCacheTimeout` method.
+```csharp
+builder.SetCacheTimeout(VALUE_IN_MILLISECONDS);
 ```
