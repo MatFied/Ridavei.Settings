@@ -120,7 +120,7 @@ namespace TestProgram
                 .UseExampleManager();
             using (ASettings settings = settingsBuilder.GetSettings("ExampleDictionary"))
             {
-                //Operations through the settings
+                //Operations on the settings
             }
         }
     }
