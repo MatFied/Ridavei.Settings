@@ -8,9 +8,21 @@ namespace Ridavei.Settings.Tests.Cache
     [TestFixture]
     public class KeyGeneratorTests
     {
-        [TestCase(null, null, "Dict___")]
-        [TestCase("TestDict", null, "Dict_TestDict__")]
-        [TestCase(null, "TestKey", "Dict___TestKey")]
+        [TestCase(null, null, "")]
+        [TestCase(null, "", "")]
+        [TestCase(null, "        ", "")]
+        [TestCase("", null, "")]
+        [TestCase("", "", "")]
+        [TestCase("", "       ", "")]
+        [TestCase("         ", null, "")]
+        [TestCase("         ", "", "")]
+        [TestCase("         ", "       ", "")]
+        [TestCase("TestDict", null, "")]
+        [TestCase("TestDict", "", "")]
+        [TestCase("TestDict", "          ", "")]
+        [TestCase(null, "TestKey", "")]
+        [TestCase("", "TestKey", "")]
+        [TestCase("        ", "TestKey", "")]
         [TestCase("TestDict", "TestKey", "Dict_TestDict__TestKey")]
         public void Generate__ReturnsString(string dictionaryName, string key, string expectedValue)
         {
@@ -20,7 +32,9 @@ namespace Ridavei.Settings.Tests.Cache
             });
         }
 
-        [TestCase(null, "Dict__GetAllDictionary")]
+        [TestCase(null, "")]
+        [TestCase("", "")]
+        [TestCase("      ", "")]
         [TestCase("TestDict", "Dict_TestDict_GetAllDictionary")]
         public void GenerateForGetAllDictionary__ReturnsString(string dictionaryName, string expectedValue)
         {
@@ -30,7 +44,9 @@ namespace Ridavei.Settings.Tests.Cache
             });
         }
 
-        [TestCase(null, "Dict_")]
+        [TestCase(null, "")]
+        [TestCase("", "")]
+        [TestCase("      ", "")]
         [TestCase("TestDict", "Dict_TestDict")]
         public void GenerateForDictionary__ReturnsString(string dictionaryName, string expectedValue)
         {

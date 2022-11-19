@@ -2,7 +2,7 @@ name: .NET
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, 2.* ]
     tags: v2.*
     paths-ignore:
     - 'README.md'
@@ -24,6 +24,7 @@ jobs:
           3.1.x
           5.0.x
           6.0.x
+          7.0.x
     - name: Restore dependencies
       run: dotnet restore
     - name: Build

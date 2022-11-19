@@ -4,11 +4,11 @@
 
 Ridavei.Settings is a cross-platform library created to ease getting and setting values in settings manager.\
 For caching it uses [MemoryCache](https://learn.microsoft.com/pl-pl/dotnet/api/system.runtime.caching.memorycache).\
-Classes implement the [IDisposable](https://learn.microsoft.com/pl-pl/dotnet/api/system.idisposable) interface to dispose objects that are created by the extensions.
+The settings class implement the [IDisposable](https://learn.microsoft.com/pl-pl/dotnet/api/system.idisposable) interface to dispose objects that are created by the extensions.
 
 ## Examples in using Settings
 
-### Get settings and change and retrieve its values.
+### Get settings and then change and retrieve its values.
 ```csharp
 using Ridavei.Settings;
 using Ridavei.Settings.Interface;
@@ -21,8 +21,8 @@ namespace TestProgram
         {
             SettingsBuilder settingsBuilder = SettingsBuilder
                 .CreateBuilder()
-                .SetManager(YOUR_MANAGER_CLASS); //The manager class will be disposed by the SettingsBuilder.
-            using (ISettings settings = settingsBuilder.GetSettings("DictionaryName"))
+                .SetManager(YOUR_MANAGER_CLASS);
+            using (ASettings settings = settingsBuilder.GetSettings("DictionaryName"))
             {
                 //You can use settings.Get("ExampleKey", "DefaultValue") if you want to retrieve the default value if the key doesn't exists.
                 string value = settings.Get("ExampleKey");
@@ -47,8 +47,8 @@ namespace TestProgram
         {
             SettingsBuilder settingsBuilder = SettingsBuilder
                 .CreateBuilder()
-                .SetManager(YOUR_MANAGER_CLASS); //The manager class will be disposed by the SettingsBuilder.
-            using (ISettings settings = settingsBuilder.GetSettings("DictionaryName"))
+                .SetManager(YOUR_MANAGER_CLASS);
+            using (ASettings settings = settingsBuilder.GetSettings("DictionaryName"))
             {
                 //Returns the IReadOnlyDictionary to prevent from value changing.
                 IReadOnlyDictionary<string, string> dict = settings.GetAll();
@@ -56,4 +56,9 @@ namespace TestProgram
         }
     }
 }
+```
+```
+### To use the cache for storing the settings values you can use use the 'EnableCache' method.
+```csharp
+builder.EnableCache();
 ```

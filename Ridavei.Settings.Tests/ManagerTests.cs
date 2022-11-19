@@ -212,7 +212,7 @@ namespace Ridavei.Settings.Tests
         {
             Should.NotThrow(() =>
             {
-                var manager = new MockManager(true, false);
+                var manager = new MockManager(true, true);
                 manager.Init(true, 100);
 
                 using (var settings = manager.GetOrCreateSettings(DictionaryName))
@@ -221,6 +221,27 @@ namespace Ridavei.Settings.Tests
                     var settingsToCompare = manager.GetOrCreateSettings(DictionaryName);
                     settingsToCompare.ShouldNotBeNull();
                     settingsToCompare.ShouldBe(settings);
+                }
+            });
+        }
+
+        [Test]
+        public void GetOrCreateSettings_UseCache_UseTheSameDictionaryName_MultipleCall__GetTheSameObject()
+        {
+            Should.NotThrow(() =>
+            {
+                var manager = new MockManager(true, true);
+                manager.Init(true, 1000000000);
+
+                using (var settings = manager.GetOrCreateSettings(DictionaryName))
+                {
+                    settings.ShouldNotBeNull();
+                    for (int i = 0; i < 100; i++)
+                    {
+                        var settingsToCompare = manager.GetOrCreateSettings(DictionaryName);
+                        settingsToCompare.ShouldNotBeNull();
+                        settingsToCompare.ShouldBe(settings);
+                    }
                 }
             });
         }
