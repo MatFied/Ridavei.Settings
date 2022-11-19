@@ -146,6 +146,7 @@ namespace TestProgram
             return true;
         }
     }
+    
     public class ExampleSettings : ASettings
     {
         public ExampleSettings(string dictionaryName) : base(dictionaryName) { }
