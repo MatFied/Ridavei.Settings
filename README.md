@@ -101,3 +101,67 @@ You can also change the timeout for the cache (default is 15 minutes) by using `
 ```csharp
 builder.SetCacheTimeout(VALUE_IN_MILLISECONDS);
 ```
+
+## Example of creating extensions
+```csharp
+using System.Collections.Generic;
+
+using Ridavei.Settings;
+using Ridavei.Settings.Base;
+
+namespace TestProgram
+{
+    public class Program
+    {
+        public static void Main(string[] args)
+        {
+            SettingsBuilder settingsBuilder = SettingsBuilder
+                .CreateBuilder()
+                .UseExampleManager();
+            using (ASettings settings = settingsBuilder.GetSettings("ExampleDictionary"))
+            {
+                //Operations through the settings
+            }
+        }
+    }
+
+    public static class Ext
+    {
+        public static SettingsBuilder UseExampleManager(this SettingsBuilder builder)
+        {
+            return builder.SetManager(new ExampleManager());
+        }
+    }
+
+    public class ExampleManager : AManager
+    {
+        protected override ASettings CreateSettingsObject(string dictionaryName)
+        {
+            return new ExampleSettings(dictionaryName);
+        }
+
+        protected override bool TryGetSettingsObject(string dictionaryName, out ASettings settings)
+        {
+            settings = new ExampleSettings(dictionaryName);
+            return true;
+        }
+    }
+    public class ExampleSettings : ASettings
+    {
+        public ExampleSettings(string dictionaryName) : base(dictionaryName) { }
+
+        protected override IReadOnlyDictionary<string, string> GetAllValues()
+        {
+            return new Dictionary<string, string>();
+        }
+
+        protected override bool TryGetValue(string key, out string value)
+        {
+            value = "Example";
+            return true;
+        }
+
+        protected override void SetValue(string key, string value) { }
+    }
+}
+```
