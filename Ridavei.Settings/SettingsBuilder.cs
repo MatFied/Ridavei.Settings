@@ -7,7 +7,7 @@ using Ridavei.Settings.Internals;
 namespace Ridavei.Settings
 {
     /// <summary>
-    /// Builder to receive settings.
+    /// Builder to receive or create settings.
     /// </summary>
     public sealed class SettingsBuilder
     {
@@ -37,7 +37,7 @@ namespace Ridavei.Settings
         }
 
         /// <summary>
-        /// Sets the timeout for cache
+        /// Sets the timeout for cache.
         /// </summary>
         /// <param name="cacheItemTimeout">Timeout for the cache in milliseconds</param>
         /// <returns>Builder</returns>
@@ -52,18 +52,13 @@ namespace Ridavei.Settings
 
         /// <summary>
         /// Sets the manager object used to retrieve settings.
-        /// <para>The manager will be disposed by the <see cref="SettingsBuilder"/>.</para>
-        /// <para>If there was a previously setted manager then it will be disposed.</para>
         /// </summary>
         /// <param name="manager">Manager object</param>
         /// <returns>Builder</returns>
         /// <exception cref="ArgumentNullException">Throwed when the manager object is null.</exception>
         public SettingsBuilder SetManager(AManager manager)
         {
-            if (manager == null)
-                throw new ArgumentNullException(nameof(manager), "The manager object cannot be null.");
-
-            _manager = manager;
+            _manager = manager ?? throw new ArgumentNullException(nameof(manager), "The manager object cannot be null.");
             return this;
         }
 

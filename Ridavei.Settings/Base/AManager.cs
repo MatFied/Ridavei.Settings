@@ -46,12 +46,13 @@ namespace Ridavei.Settings.Base
         /// <param name="dictionaryName">Name of the dictionary</param>
         /// <returns>Settings</returns>
         /// <exception cref="ArgumentNullException">Throwed when the name of the dictionary is null, empty or whitespace.</exception>
+        /// <exception cref="DictionaryNotFoundException">Throwed when the name of the dictionary was not found.</exception>
         internal ASettings GetSettings(string dictionaryName)
         {
             if (string.IsNullOrWhiteSpace(dictionaryName))
                 throw new ArgumentNullException(nameof(dictionaryName), "The name of the dictionary cannot be null or empty or whitespace.");
-            ASettings res;
-            var exists = UseCache ? TryGetCachedSettings(dictionaryName, out res) : TryGetSettingsObject(dictionaryName, out res);
+
+            var exists = UseCache ? TryGetCachedSettings(dictionaryName, out ASettings res) : TryGetSettingsObject(dictionaryName, out res);
             if (!exists)
                 throw new DictionaryNotFoundException(dictionaryName);
             res.Init(UseCache, CacheTimeout);

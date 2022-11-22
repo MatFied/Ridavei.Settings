@@ -195,6 +195,9 @@ namespace Ridavei.Settings.Base
             return true;
         }
 
+        /// <summary>
+        /// Returns all keys with their values from the cache.
+        /// </summary>
         private IReadOnlyDictionary<string, string> GetAllFromCache()
         {
             var keyNameForGetAllDictionary = KeyGenerator.GenerateForGetAllDictionary(DictionaryName);
