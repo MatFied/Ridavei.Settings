@@ -1,8 +1,11 @@
 ﻿using System;
 
 using Ridavei.Settings.Base;
+using Ridavei.Settings.Cache;
 using Ridavei.Settings.Exceptions;
 using Ridavei.Settings.Internals;
+
+using Microsoft.Extensions.Caching.Distributed;
 
 namespace Ridavei.Settings
 {
@@ -11,42 +14,28 @@ namespace Ridavei.Settings
     /// </summary>
     public sealed class SettingsBuilder
     {
-        private bool _useCache;
-        private int _cacheTimeout = Consts.DefaultCacheTimeout;
         private AManager _manager;
+        private CacheManager _cacheManager;
 
         /// <summary>
         /// Static method to create the builder.
         /// </summary>
         /// <returns>Builder</returns>
-        public static SettingsBuilder CreateBuilder()
-        {
-            return new SettingsBuilder();
-        }
+        public static SettingsBuilder CreateBuilder() => new SettingsBuilder();
 
         private SettingsBuilder() { }
 
         /// <summary>
         /// Enables to cache settings objects.
         /// </summary>
+        /// <param name="distributedCache">Distributed cache</param>
+        /// <param name="cacheTimeout">Timeout for the cache in milliseconds</param>
         /// <returns>Builder</returns>
-        public SettingsBuilder EnableCache()
-        {
-            _useCache = true;
-            return this;
-        }
-
-        /// <summary>
-        /// Sets the timeout for cache.
-        /// </summary>
-        /// <param name="cacheItemTimeout">Timeout for the cache in milliseconds</param>
-        /// <returns>Builder</returns>
+        /// <exception cref="ArgumentNullException">Throwed when the <see cref="IDistributedCache"/> object is null.</exception>
         /// <exception cref="ArgumentException">Throwed when the cache timeout value is lower then <see cref="Consts.MinCacheTimeout"/>.</exception>
-        public SettingsBuilder SetCacheTimeout(int cacheItemTimeout)
+        public SettingsBuilder SetDistributedCache(IDistributedCache distributedCache, int cacheTimeout = Consts.DefaultCacheTimeout)
         {
-            if (cacheItemTimeout < Consts.MinCacheTimeout)
-                throw new ArgumentException($"The cache timeout cannot be lower then {Consts.MinCacheTimeout}.", nameof(cacheItemTimeout));
-            _cacheTimeout = cacheItemTimeout;
+            _cacheManager = new CacheManager(distributedCache, cacheTimeout);
             return this;
         }
 
@@ -71,8 +60,8 @@ namespace Ridavei.Settings
         /// <returns>Settings</returns>
         public ASettings GetSettings(string dictionaryName)
         {
-            if (string.IsNullOrWhiteSpace(dictionaryName))
-                throw new ArgumentNullException(nameof(dictionaryName), "The name of the dictionary cannot be null or empty or whitespace.");
+            VerifyDictionaryName(dictionaryName);
+
             InitManager();
             return _manager.GetSettings(dictionaryName);
         }
@@ -86,8 +75,8 @@ namespace Ridavei.Settings
         /// <returns>Settings</returns>
         public ASettings GetOrCreateSettings(string dictionaryName)
         {
-            if (string.IsNullOrWhiteSpace(dictionaryName))
-                throw new ArgumentNullException(nameof(dictionaryName), "The name of the dictionary cannot be null or empty or whitespace.");
+            VerifyDictionaryName(dictionaryName);
+
             InitManager();
             return _manager.GetOrCreateSettings(dictionaryName);
         }
@@ -100,7 +89,18 @@ namespace Ridavei.Settings
         {
             if (_manager == null)
                 throw new ManagerNotExistsException();
-            _manager.Init(_useCache, _cacheTimeout);
+            _manager.Init(_cacheManager);
+        }
+
+        /// <summary>
+        /// Checks the dictionary name.
+        /// </summary>
+        /// <param name="dictionaryName">Name of the dictionary</param>
+        /// <exception cref="ArgumentNullException">Throwed when the name of the dictionary is null, empty or whitespace.</exception>
+        private static void VerifyDictionaryName(string dictionaryName)
+        {
+            if (string.IsNullOrWhiteSpace(dictionaryName))
+                throw new ArgumentNullException(nameof(dictionaryName), "The name of the dictionary cannot be null or empty or whitespace.");
         }
     }
 }

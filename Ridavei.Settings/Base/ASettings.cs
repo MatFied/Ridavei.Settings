@@ -10,24 +10,16 @@ namespace Ridavei.Settings.Base
     /// </summary>
     public abstract class ASettings : IDisposable
     {
-        private bool _initialized = false;
-
         private static readonly object _lock = new object();
+
+        private bool _initialized = false;
+        private bool _useCache;
+        internal CacheManager CacheManager;
 
         /// <summary>
         /// Name of the dictionary
         /// </summary>
         public readonly string DictionaryName;
-
-        /// <summary>
-        /// Defines if the settings class should use cache.
-        /// </summary>
-        public bool UseCache { get; private set; }
-
-        /// <summary>
-        /// Timeout for the cache in milliseconds.
-        /// </summary>
-        public int CacheTimeout { get; private set; }
 
         /// <summary>
         /// The default constructor for settings class.
@@ -65,8 +57,8 @@ namespace Ridavei.Settings.Base
             lock (_lock)
             {
                 SetValue(key, value);
-                if (UseCache)
-                    AddToCache(key, value, EvictPolicyGenerator.GetAbsoluteExpirationTime(CacheTimeout));
+                if (_useCache)
+                    AddToCache(key, value);
             }
         }
 
@@ -123,21 +115,20 @@ namespace Ridavei.Settings.Base
         /// <returns>Dictionary of keys and values.</returns>
         public IReadOnlyDictionary<string, string> GetAll()
         {
-            return UseCache ? GetAllFromCache() : GetAllValues();
+            return _useCache ? GetAllFromCache() : GetAllValues();
         }
 
         /// <summary>
         /// Initializes values for the settings.
         /// </summary>
-        /// <param name="useCache">Defines if the settings class should use cache</param>
-        /// <param name="cacheTimeout">Timeout for the cache in milliseconds</param>
-        internal void Init(bool useCache, int cacheTimeout)
+        /// <param name="cacheManager">Cache manager object</param>
+        internal void Init(CacheManager cacheManager)
         {
             if (_initialized)
                 return;
 
-            UseCache = useCache;
-            CacheTimeout = cacheTimeout;
+            CacheManager = cacheManager;
+            _useCache = CacheManager != null;
             _initialized = true;
         }
 
@@ -162,6 +153,12 @@ namespace Ridavei.Settings.Base
         protected abstract IReadOnlyDictionary<string, string> GetAllValues();
 
         /// <summary>
+        /// Releases all resources used by the Settings object.
+        /// </summary>
+        /// <param name="disposing"></param>
+        protected virtual void Dispose(bool disposing) { }
+
+        /// <summary>
         /// Tries to get the settings value from the cache or by method.
         /// </summary>
         /// <param name="key">Settings key</param>
@@ -169,7 +166,7 @@ namespace Ridavei.Settings.Base
         /// <returns>True if the settings value exists or false if not.</returns>
         private bool TryGet(string key, out string value)
         {
-            return UseCache ? TryGetUsingCache(key, out value) : TryGetValue(key, out value);
+            return _useCache ? TryGetUsingCache(key, out value) : TryGetValue(key, out value);
         }
 
         /// <summary>
@@ -184,12 +181,12 @@ namespace Ridavei.Settings.Base
             var genKey = KeyGenerator.Generate(DictionaryName, key);
             lock (_lock)
             {
-                value = CacheManager.Get(genKey) as string;
+                value = CacheManager.GetString(genKey);
                 if (value == null)
                 {
                     if (!TryGetValue(key, out value))
                         return false;
-                    CacheManager.Add(genKey, value, EvictPolicyGenerator.GetAbsoluteExpirationTime(CacheTimeout));
+                    CacheManager.AddString(genKey, value);
                 }
             }
             return true;
@@ -203,16 +200,16 @@ namespace Ridavei.Settings.Base
             var keyNameForGetAllDictionary = KeyGenerator.GenerateForGetAllDictionary(DictionaryName);
             lock (_lock)
             {
-                if (CacheManager.Get(keyNameForGetAllDictionary) is IReadOnlyDictionary<string, string> dict)
+                var dict = CacheManager.GetDictionary(keyNameForGetAllDictionary);
+                if (dict != null)
                     return dict;
                 else
                 {
-                    var res = GetAllValues();
-                    var absoluteExpiration = EvictPolicyGenerator.GetAbsoluteExpirationTime(CacheTimeout);
-                    foreach (var kvp in res)
-                        AddToCache(kvp.Key, kvp.Value, absoluteExpiration);
-                    CacheManager.Add(keyNameForGetAllDictionary, res, absoluteExpiration);
-                    return res;
+                    dict = GetAllValues();
+                    foreach (var kvp in dict)
+                        AddToCache(kvp.Key, kvp.Value);
+                    CacheManager.AddDictionary(keyNameForGetAllDictionary, dict);
+                    return dict;
                 }
             }
         }
@@ -222,16 +219,9 @@ namespace Ridavei.Settings.Base
         /// </summary>
         /// <param name="key">Settings key</param>
         /// <param name="value">Settings value</param>
-        /// <param name="absoluteExpiration">Time when the object will expire from the cache.</param>
-        private void AddToCache(string key, string value, DateTimeOffset absoluteExpiration)
+        private void AddToCache(string key, string value)
         {
-            CacheManager.Add(KeyGenerator.Generate(DictionaryName, key), value, absoluteExpiration);
+            CacheManager.AddString(KeyGenerator.Generate(DictionaryName, key), value);
         }
-
-        /// <summary>
-        /// Releases all resources used by the Settings object.
-        /// </summary>
-        /// <param name="disposing"></param>
-        protected virtual void Dispose(bool disposing) { }
     }
 }
