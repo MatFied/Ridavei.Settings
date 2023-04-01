@@ -92,14 +92,10 @@ namespace TestProgram
 
 ## Caching
 
-For caching it uses [MemoryCache](https://learn.microsoft.com/pl-pl/dotnet/api/system.runtime.caching.memorycache).\
-To use the cache for storing the settings values you can use the `EnableCache` method.
+For caching it uses [IDistributedCache](https://learn.microsoft.com/pl-pl/dotnet/api/microsoft.extensions.caching.distributed.idistributedcache).\
+To use the cache for storing the settings values you can use the `SetDistributedCache` method.
 ```csharp
-builder.EnableCache();
-```
-You can also change the timeout for the cache (default is 15 minutes) by using `SetCacheTimeout` method.
-```csharp
-builder.SetCacheTimeout(VALUE_IN_MILLISECONDS);
+builder.SetDistributedCache(IDistributedCache distributedCache, int cacheTimeout);
 ```
 
 ## Example of creating extensions

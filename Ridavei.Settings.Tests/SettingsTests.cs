@@ -2,9 +2,13 @@
 using System.Collections.Generic;
 
 using Ridavei.Settings.Cache;
+using Ridavei.Settings.Internals;
 
 using Ridavei.Settings.Tests.Settings;
 
+using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Options;
 using NUnit.Framework;
 using Shouldly;
 
@@ -16,11 +20,13 @@ namespace Ridavei.Settings.Tests
         private const string DictionaryName = "TestDict";
         private const string KeyName = "TestKey";
 
+        private CacheManager _cacheManager = new CacheManager(new MemoryDistributedCache(Options.Create<MemoryDistributedCacheOptions>(new MemoryDistributedCacheOptions())), Consts.DefaultCacheTimeout);
+
         [TearDown]
         public void TearDown()
         {
-            CacheManager.Remove(KeyGenerator.Generate(DictionaryName, KeyName));
-            CacheManager.Remove(KeyGenerator.GenerateForGetAllDictionary(DictionaryName));
+            _cacheManager.Remove(KeyGenerator.Generate(DictionaryName, KeyName));
+            _cacheManager.Remove(KeyGenerator.GenerateForGetAllDictionary(DictionaryName));
         }
 
         [Test]
@@ -58,8 +64,7 @@ namespace Ridavei.Settings.Tests
                 using (var settings = new MockSettings(DictionaryName))
                 {
                     settings.DictionaryName.ShouldBe(DictionaryName);
-                    settings.UseCache.ShouldBe(false);
-                    settings.CacheTimeout.ShouldBe(0);
+                    settings.CacheManager.ShouldBeNull();
                 }
             });
         }
@@ -69,16 +74,12 @@ namespace Ridavei.Settings.Tests
         {
             Should.NotThrow(() =>
             {
-                bool useCache = true;
-                int cacheTimeout = -10;
-
                 using (var settings = new MockSettings(DictionaryName))
                 {
-                    settings.Init(useCache, cacheTimeout);
+                    settings.Init(_cacheManager);
 
                     settings.DictionaryName.ShouldBe(DictionaryName);
-                    settings.UseCache.ShouldBe(useCache);
-                    settings.CacheTimeout.ShouldBe(cacheTimeout);
+                    settings.CacheManager.ShouldNotBeNull();
                 }
             });
         }
@@ -88,18 +89,14 @@ namespace Ridavei.Settings.Tests
         {
             Should.NotThrow(() =>
             {
-                bool useCache = true;
-                int cacheTimeout = -10;
-
                 using (var settings = new MockSettings(DictionaryName))
                 {
-                    settings.Init(useCache, cacheTimeout);
+                    settings.Init(_cacheManager);
                     for (int i = 0; i < 10; i++)
-                        settings.Init(i % 2 == 1, i);
+                        settings.Init(null);
 
                     settings.DictionaryName.ShouldBe(DictionaryName);
-                    settings.UseCache.ShouldBe(useCache);
-                    settings.CacheTimeout.ShouldBe(cacheTimeout);
+                    settings.CacheManager.ShouldNotBeNull();
                 }
             });
         }
@@ -307,7 +304,7 @@ namespace Ridavei.Settings.Tests
             {
                 using (var settings = CreateSettings())
                     settings.Get(KeyName).ShouldNotBeNullOrEmpty();
-                CacheManager.Get(KeyGenerator.Generate(DictionaryName, KeyName)).ShouldBeNull();
+                _cacheManager.GetString(KeyGenerator.Generate(DictionaryName, KeyName)).ShouldBeNull();
             });
         }
 
@@ -410,7 +407,7 @@ namespace Ridavei.Settings.Tests
                     val.ShouldNotBeNullOrEmpty();
                     val.ShouldBe(defaultValue);
                 }
-                CacheManager.Get(KeyGenerator.Generate(DictionaryName, KeyName)).ShouldBeNull();
+                _cacheManager.GetString(KeyGenerator.Generate(DictionaryName, KeyName)).ShouldBeNull();
             });
         }
 
@@ -426,7 +423,7 @@ namespace Ridavei.Settings.Tests
                     val.ShouldNotBeNullOrEmpty();
                     val.ShouldNotBe(defaultValue);
                 }
-                CacheManager.Get(KeyGenerator.Generate(DictionaryName, KeyName)).ShouldBeNull();
+                _cacheManager.GetString(KeyGenerator.Generate(DictionaryName, KeyName)).ShouldBeNull();
             });
         }
 
@@ -463,7 +460,7 @@ namespace Ridavei.Settings.Tests
                     val.ShouldNotBeNull();
                     val.Count.ShouldBe(0);
                 }
-                CacheManager.Get(KeyGenerator.GenerateForGetAllDictionary(DictionaryName)).ShouldBeNull();
+                _cacheManager.GetString(KeyGenerator.GenerateForGetAllDictionary(DictionaryName)).ShouldBeNull();
             });
         }
 
@@ -493,7 +490,7 @@ namespace Ridavei.Settings.Tests
                     val.ShouldNotBeNull();
                     val.Count.ShouldBe(10);
                 }
-                CacheManager.Get(KeyGenerator.GenerateForGetAllDictionary(DictionaryName)).ShouldBeNull();
+                _cacheManager.GetString(KeyGenerator.GenerateForGetAllDictionary(DictionaryName)).ShouldBeNull();
             });
         }
 
@@ -513,7 +510,7 @@ namespace Ridavei.Settings.Tests
                     finally
                     {
                         foreach (var kvp in val)
-                            CacheManager.Remove(KeyGenerator.Generate(DictionaryName, kvp.Key));
+                            _cacheManager.Remove(KeyGenerator.Generate(DictionaryName, kvp.Key));
                     }
                 }
             });
@@ -539,7 +536,7 @@ namespace Ridavei.Settings.Tests
                     finally
                     {
                         foreach (var kvp in val)
-                            CacheManager.Remove(KeyGenerator.Generate(DictionaryName, kvp.Key));
+                            _cacheManager.Remove(KeyGenerator.Generate(DictionaryName, kvp.Key));
                     }
                 }
             });
@@ -548,7 +545,7 @@ namespace Ridavei.Settings.Tests
         private MockSettings CreateSettings(bool useCache = false)
         {
             var res = new MockSettings(DictionaryName);
-            res.Init(useCache, 1000000);
+            res.Init(useCache ? _cacheManager : null);
             return res;
         }
     }

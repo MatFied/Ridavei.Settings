@@ -5,6 +5,9 @@ using Ridavei.Settings.Internals;
 
 using Ridavei.Settings.Tests.Managers;
 
+using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Options;
 using NUnit.Framework;
 using Shouldly;
 
@@ -100,32 +103,12 @@ namespace Ridavei.Settings.Tests
         }
 
         [Test]
-        public void EnableCache__NoException()
+        public void SetDistributedCache__NoException()
         {
             Should.NotThrow(() =>
             {
                 var builder = SettingsBuilder.CreateBuilder();
-                builder.EnableCache();
-            });
-        }
-
-        [Test]
-        public void SetCacheTimeout_BelowMinimumValue__RaisesException()
-        {
-            Should.Throw<ArgumentException>(() =>
-            {
-                var builder = SettingsBuilder.CreateBuilder();
-                builder.SetCacheTimeout(-100);
-            });
-        }
-
-        [Test]
-        public void SetCacheTimeout__NoException()
-        {
-            Should.NotThrow(() =>
-            {
-                var builder = SettingsBuilder.CreateBuilder();
-                builder.SetCacheTimeout(Consts.MinCacheTimeout);
+                builder.SetDistributedCache(new MemoryDistributedCache(Options.Create<MemoryDistributedCacheOptions>(new MemoryDistributedCacheOptions())), Consts.DefaultCacheTimeout);
             });
         }
     }
