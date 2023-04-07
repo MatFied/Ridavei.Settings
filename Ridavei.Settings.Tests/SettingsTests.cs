@@ -7,10 +7,10 @@ using Ridavei.Settings.Internals;
 using Ridavei.Settings.Tests.Settings;
 
 using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Options;
 using NUnit.Framework;
 using Shouldly;
+using NSubstitute;
+using System.Linq;
 
 namespace Ridavei.Settings.Tests
 {
@@ -20,7 +20,16 @@ namespace Ridavei.Settings.Tests
         private const string DictionaryName = "TestDict";
         private const string KeyName = "TestKey";
 
-        private CacheManager _cacheManager = new CacheManager(new MemoryDistributedCache(Options.Create<MemoryDistributedCacheOptions>(new MemoryDistributedCacheOptions())), Consts.DefaultCacheTimeout);
+        private IDistributedCache _fakeCache;
+        private CacheManager _cacheManager;
+
+        [SetUp]
+        public void SetUp()
+        {
+            _fakeCache = Substitute.For<IDistributedCache>();
+            _fakeCache.Get(Arg.Any<string>()).Returns((byte[])null);
+            _cacheManager = new CacheManager(_fakeCache, Consts.DefaultCacheTimeout);
+        }
 
         [TearDown]
         public void TearDown()
@@ -178,6 +187,7 @@ namespace Ridavei.Settings.Tests
             {
                 using (var settings = CreateSettings(true))
                     settings.Set(KeyName, "Test");
+                _fakeCache.Received(1).Set(Arg.Any<string>(), Arg.Any<byte[]>(), Arg.Any<DistributedCacheEntryOptions>());
             });
         }
 
@@ -224,6 +234,7 @@ namespace Ridavei.Settings.Tests
                 Dictionary<string, string> dict = new Dictionary<string, string>();
                 using (var settings = CreateSettings(true))
                     settings.Set(dict);
+                _fakeCache.Received(0).Set(Arg.Any<string>(), Arg.Any<byte[]>(), Arg.Any<DistributedCacheEntryOptions>());
             });
         }
 
@@ -238,6 +249,7 @@ namespace Ridavei.Settings.Tests
                 };
                 using (var settings = CreateSettings(true))
                     settings.Set(dict);
+                _fakeCache.Received(1).Set(Arg.Any<string>(), Arg.Any<byte[]>(), Arg.Any<DistributedCacheEntryOptions>());
             });
         }
 
@@ -294,6 +306,7 @@ namespace Ridavei.Settings.Tests
                     settings.ReturnValue = false;
                     settings.Get(KeyName);
                 }
+                _fakeCache.Received(1).Get(Arg.Any<string>());
             });
         }
 
@@ -323,6 +336,7 @@ namespace Ridavei.Settings.Tests
                         cacheVal.ShouldNotBeNullOrEmpty();
                         val.ShouldBe(cacheVal);
                     }
+                    _fakeCache.Received(11).Get(Arg.Any<string>());
                 }
             });
         }
@@ -347,6 +361,7 @@ namespace Ridavei.Settings.Tests
                         val.ShouldBe(cacheVal2);
                         val.ShouldNotBe(cacheVal);
                     }
+                    _fakeCache.Received(21).Get(Arg.Any<string>());
                 }
             });
         }
@@ -408,6 +423,7 @@ namespace Ridavei.Settings.Tests
                     val.ShouldBe(defaultValue);
                 }
                 _cacheManager.GetString(KeyGenerator.Generate(DictionaryName, KeyName)).ShouldBeNull();
+                _fakeCache.Received(2).Get(Arg.Any<string>());
             });
         }
 
@@ -444,6 +460,7 @@ namespace Ridavei.Settings.Tests
                         cacheVal.ShouldNotBeNullOrEmpty();
                         val.ShouldBe(cacheVal);
                     }
+                    _fakeCache.Received(11).Get(Arg.Any<string>());
                 }
             });
         }
@@ -475,6 +492,7 @@ namespace Ridavei.Settings.Tests
                     var val = settings.GetAll();
                     val.ShouldNotBeNull();
                     val.Count.ShouldBe(0);
+                    _fakeCache.Received(1).Get(Arg.Any<string>());
                 }
             });
         }
@@ -502,16 +520,11 @@ namespace Ridavei.Settings.Tests
                 using (var settings = CreateSettings(true))
                 {
                     var val = settings.GetAll();
-                    try
-                    {
-                        val.ShouldNotBeNull();
-                        val.Count.ShouldBe(10);
-                    }
-                    finally
-                    {
-                        foreach (var kvp in val)
-                            _cacheManager.Remove(KeyGenerator.Generate(DictionaryName, kvp.Key));
-                    }
+                    val.ShouldNotBeNull();
+                    val.Count.ShouldBe(10);
+
+                    _fakeCache.Received(1).Get(Arg.Any<string>());
+                    _fakeCache.Received(11).Set(Arg.Any<string>(), Arg.Any<byte[]>(), Arg.Any<DistributedCacheEntryOptions>());
                 }
             });
         }
@@ -524,20 +537,14 @@ namespace Ridavei.Settings.Tests
                 using (var settings = CreateSettings(true))
                 {
                     var val = settings.GetAll();
-                    try
-                    {
-                        val.ShouldNotBeNull();
-                        val.Count.ShouldBe(10);
-                        var valSecond = settings.GetAll();
-                        valSecond.ShouldNotBeNull();
-                        valSecond.Count.ShouldBe(10);
-                        valSecond.ShouldBe(val);
-                    }
-                    finally
-                    {
-                        foreach (var kvp in val)
-                            _cacheManager.Remove(KeyGenerator.Generate(DictionaryName, kvp.Key));
-                    }
+                    val.ShouldNotBeNull();
+                    val.Count.ShouldBe(10);
+                    var valSecond = settings.GetAll();
+                    valSecond.ShouldNotBeNull();
+                    valSecond.Count.ShouldBe(10);
+                    valSecond.ShouldBe(val);
+                    _fakeCache.Received(2).Get(Arg.Any<string>());
+                    _fakeCache.Received(22).Set(Arg.Any<string>(), Arg.Any<byte[]>(), Arg.Any<DistributedCacheEntryOptions>());
                 }
             });
         }

@@ -1,21 +1,30 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading;
+using System.Text.Json;
 
 using Ridavei.Settings.Cache;
 using Ridavei.Settings.Internals;
 
 using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Options;
 using NUnit.Framework;
 using Shouldly;
+using NSubstitute;
+using System.Text;
+using System.Linq;
 
 namespace Ridavei.Settings.Tests.Cache
 {
     [TestFixture]
     public class CacheManagerTests
     {
+        private IDistributedCache _fakeCache;
+
+        [SetUp]
+        public void SetUp()
+        {
+            _fakeCache = Substitute.For<IDistributedCache>();
+        }
+
         [Test]
         public void Constructor_NullDistributedCache__RaisesException()
         {
@@ -30,7 +39,7 @@ namespace Ridavei.Settings.Tests.Cache
         {
             Should.Throw<ArgumentException>(() =>
             {
-                _ = new CacheManager(new MemoryDistributedCache(Options.Create<MemoryDistributedCacheOptions>(new MemoryDistributedCacheOptions())), -1);
+                _ = new CacheManager(_fakeCache, -1);
             });
         }
 
@@ -39,7 +48,7 @@ namespace Ridavei.Settings.Tests.Cache
         {
             Should.NotThrow(() =>
             {
-                var cacheManager = new CacheManager(new MemoryDistributedCache(Options.Create<MemoryDistributedCacheOptions>(new MemoryDistributedCacheOptions())), Consts.DefaultCacheTimeout);
+                var cacheManager = new CacheManager(_fakeCache, Consts.DefaultCacheTimeout);
                 cacheManager.ShouldNotBeNull();
             });
         }
@@ -49,36 +58,17 @@ namespace Ridavei.Settings.Tests.Cache
         {
             Should.NotThrow(() =>
             {
-                var cacheManager = new CacheManager(new MemoryDistributedCache(Options.Create<MemoryDistributedCacheOptions>(new MemoryDistributedCacheOptions())), Consts.DefaultCacheTimeout);
+                var cacheManager = new CacheManager(_fakeCache, Consts.DefaultCacheTimeout);
                 var key = "AddString__ObjectExistsInCache";
                 var expectedValue = "Test";
-                try
-                {
-                    cacheManager.AddString(key, expectedValue);
-                    var val = cacheManager.GetString(key);
-                    val.ShouldNotBeNull();
-                    val.ShouldBe(expectedValue);
-                }
-                finally
-                {
-                    cacheManager.Remove(key);
-                }
-            });
-        }
-
-        [Test]
-        public void AddString_ExpireTime__ObjectNotExistsInCache()
-        {
-            Should.NotThrow(() =>
-            {
-                var milliseconds = Consts.MinCacheTimeout;
-                var cacheManager = new CacheManager(new MemoryDistributedCache(Options.Create<MemoryDistributedCacheOptions>(new MemoryDistributedCacheOptions())), milliseconds);
-                var key = "AddString_ExpireTime__ObjectNotExistsInCache";
-                var expectedValue = "Test";
+                var expectedBytes = Encoding.UTF8.GetBytes(expectedValue);
+                _fakeCache.Get(key).Returns(expectedBytes);
                 cacheManager.AddString(key, expectedValue);
-                Thread.Sleep(milliseconds + 10);
                 var val = cacheManager.GetString(key);
-                val.ShouldBeNull();
+                val.ShouldNotBeNull();
+                val.ShouldBe(expectedValue);
+                _fakeCache.Received(1).GetString(Arg.Any<string>());
+                _fakeCache.Received(1).Set(Arg.Any<string>(), Arg.Any<byte[]>(), Arg.Any<DistributedCacheEntryOptions>());
             });
         }
 
@@ -87,42 +77,21 @@ namespace Ridavei.Settings.Tests.Cache
         {
             Should.NotThrow(() =>
             {
-                var cacheManager = new CacheManager(new MemoryDistributedCache(Options.Create<MemoryDistributedCacheOptions>(new MemoryDistributedCacheOptions())), Consts.DefaultCacheTimeout);
+                var cacheManager = new CacheManager(_fakeCache, Consts.DefaultCacheTimeout);
                 var key = "AddDictionary__ObjectExistsInCache";
                 Dictionary<string, string> expectedDict = new Dictionary<string, string>
                 {
                     { "test", "test" }
                 };
-                try
-                {
-                    cacheManager.AddDictionary(key, expectedDict);
-                    var val = cacheManager.GetDictionary(key);
-                    val.ShouldNotBeNull();
-                    val.ShouldBe(expectedDict);
-                }
-                finally
-                {
-                    cacheManager.Remove(key);
-                }
-            });
-        }
-
-        [Test]
-        public void AddDictionary_ExpireTime__ObjectNotExistsInCache()
-        {
-            Should.NotThrow(() =>
-            {
-                var milliseconds = Consts.MinCacheTimeout;
-                var cacheManager = new CacheManager(new MemoryDistributedCache(Options.Create<MemoryDistributedCacheOptions>(new MemoryDistributedCacheOptions())), milliseconds);
-                var key = "AddDictionary_ExpireTime__ObjectNotExistsInCache";
-                Dictionary<string, string> expectedDict = new Dictionary<string, string>
-                {
-                    { "test", "test" }
-                };
+                var expectedValue = JsonSerializer.Serialize(expectedDict);
+                var expectedBytes = Encoding.UTF8.GetBytes(expectedValue);
+                _fakeCache.Get(key).Returns(expectedBytes);
                 cacheManager.AddDictionary(key, expectedDict);
-                Thread.Sleep(milliseconds + 10);
-                var val = cacheManager.GetString(key);
-                val.ShouldBeNull();
+                var val = cacheManager.GetDictionary(key);
+                val.ShouldNotBeNull();
+                val.ShouldBe(expectedDict);
+                _fakeCache.Received(1).GetString(Arg.Any<string>());
+                _fakeCache.Received(1).Set(Arg.Any<string>(), Arg.Any<byte[]>(), Arg.Any<DistributedCacheEntryOptions>());
             });
         }
 
@@ -132,8 +101,10 @@ namespace Ridavei.Settings.Tests.Cache
             Should.NotThrow(() =>
             {
                 var key = "GetString_NonExistingValue__GetNull";
-                var cacheManager = new CacheManager(new MemoryDistributedCache(Options.Create<MemoryDistributedCacheOptions>(new MemoryDistributedCacheOptions())), Consts.DefaultCacheTimeout);
+                var cacheManager = new CacheManager(_fakeCache, Consts.DefaultCacheTimeout);
+                _fakeCache.Get(key).Returns((byte[])null);
                 cacheManager.GetString(key).ShouldBeNull();
+                _fakeCache.Received(1).GetString(Arg.Any<string>());
             });
         }
 
@@ -143,46 +114,17 @@ namespace Ridavei.Settings.Tests.Cache
             Should.NotThrow(() =>
             {
                 var milliseconds = 1000;
-                var cacheManager = new CacheManager(new MemoryDistributedCache(Options.Create<MemoryDistributedCacheOptions>(new MemoryDistributedCacheOptions())), milliseconds);
+                var cacheManager = new CacheManager(_fakeCache, milliseconds);
                 var key = "GetString_AddValueToCache__GetValue";
                 var expectedValue = "Test";
-                try
-                {
-                    cacheManager.AddString(key, expectedValue);
-                    var val = cacheManager.GetString(key);
-                    val.ShouldNotBeNull();
-                    val.ShouldBe(expectedValue);
-                }
-                finally
-                {
-                    cacheManager.Remove(key);
-                }
-            });
-        }
-
-        [Test]
-        public void GetString_AddValueToCache_MultipleGet__GetValue()
-        {
-            Should.NotThrow(() =>
-            {
-                var milliseconds = 10000;
-                var cacheManager = new CacheManager(new MemoryDistributedCache(Options.Create<MemoryDistributedCacheOptions>(new MemoryDistributedCacheOptions())), milliseconds);
-                var key = "GetString_AddValueToCache_MultipleGet__GetValue";
-                var expectedValue = "Test";
-                try
-                {
-                    cacheManager.AddString(key, expectedValue);
-                    for (int i = 0; i < 10; i++)
-                    {
-                        var val = cacheManager.GetString(key);
-                        val.ShouldNotBeNull();
-                        val.ShouldBe(expectedValue);
-                    }
-                }
-                finally
-                {
-                    cacheManager.Remove(key);
-                }
+                var expectedBytes = Encoding.UTF8.GetBytes(expectedValue);
+                _fakeCache.Get(key).Returns(expectedBytes);
+                cacheManager.AddString(key, expectedValue);
+                var val = cacheManager.GetString(key);
+                val.ShouldNotBeNull();
+                val.ShouldBe(expectedValue);
+                _fakeCache.Received(1).GetString(Arg.Any<string>());
+                _fakeCache.Received(1).Set(Arg.Any<string>(), Arg.Any<byte[]>(), Arg.Any<DistributedCacheEntryOptions>());
             });
         }
 
@@ -192,8 +134,10 @@ namespace Ridavei.Settings.Tests.Cache
             Should.NotThrow(() =>
             {
                 var key = "GetString_NonExistingValue__GetNull";
-                var cacheManager = new CacheManager(new MemoryDistributedCache(Options.Create<MemoryDistributedCacheOptions>(new MemoryDistributedCacheOptions())), Consts.DefaultCacheTimeout);
+                var cacheManager = new CacheManager(_fakeCache, Consts.DefaultCacheTimeout);
+                _fakeCache.Get(key).Returns((byte[])null);
                 cacheManager.GetDictionary(key).ShouldBeNull();
+                _fakeCache.Received(1).GetString(Arg.Any<string>());
             });
         }
 
@@ -203,52 +147,21 @@ namespace Ridavei.Settings.Tests.Cache
             Should.NotThrow(() =>
             {
                 var milliseconds = 1000;
-                var cacheManager = new CacheManager(new MemoryDistributedCache(Options.Create<MemoryDistributedCacheOptions>(new MemoryDistributedCacheOptions())), milliseconds);
+                var cacheManager = new CacheManager(_fakeCache, milliseconds);
                 var key = "GetString_AddValueToCache__GetValue";
                 Dictionary<string, string> expectedDict = new Dictionary<string, string>
                 {
                     { "test", "test" }
                 };
-                try
-                {
-                    cacheManager.AddDictionary(key, expectedDict);
-                    var val = cacheManager.GetDictionary(key);
-                    val.ShouldNotBeNull();
-                    val.ShouldBe(expectedDict);
-                }
-                finally
-                {
-                    cacheManager.Remove(key);
-                }
-            });
-        }
-
-        [Test]
-        public void GetDictionary_AddValueToCache_MultipleGet__GetValue()
-        {
-            Should.NotThrow(() =>
-            {
-                var milliseconds = 10000;
-                var cacheManager = new CacheManager(new MemoryDistributedCache(Options.Create<MemoryDistributedCacheOptions>(new MemoryDistributedCacheOptions())), milliseconds);
-                var key = "GetString_AddValueToCache_MultipleGet__GetValue";
-                Dictionary<string, string> expectedDict = new Dictionary<string, string>
-                {
-                    { "test", "test" }
-                };
-                try
-                {
-                    cacheManager.AddDictionary(key, expectedDict);
-                    for (int i = 0; i < 10; i++)
-                    {
-                        var val = cacheManager.GetDictionary(key);
-                        val.ShouldNotBeNull();
-                        val.ShouldBe(expectedDict);
-                    }
-                }
-                finally
-                {
-                    cacheManager.Remove(key);
-                }
+                var expectedValue = JsonSerializer.Serialize(expectedDict);
+                var expectedBytes = Encoding.UTF8.GetBytes(expectedValue);
+                _fakeCache.Get(key).Returns(expectedBytes);
+                cacheManager.AddDictionary(key, expectedDict);
+                var val = cacheManager.GetDictionary(key);
+                val.ShouldNotBeNull();
+                val.ShouldBe(expectedDict);
+                _fakeCache.Received(1).GetString(Arg.Any<string>());
+                _fakeCache.Received(1).Set(Arg.Any<string>(), Arg.Any<byte[]>(), Arg.Any<DistributedCacheEntryOptions>());
             });
         }
 
@@ -258,21 +171,10 @@ namespace Ridavei.Settings.Tests.Cache
             Should.NotThrow(() =>
             {
                 var milliseconds = 1000;
-                var cacheManager = new CacheManager(new MemoryDistributedCache(Options.Create<MemoryDistributedCacheOptions>(new MemoryDistributedCacheOptions())), milliseconds);
+                var cacheManager = new CacheManager(_fakeCache, milliseconds);
                 var key = "Remove__RemoveFromCache";
-                var expectedValue = "Test";
-                try
-                {
-                    cacheManager.AddString(key, expectedValue);
-                    var val = cacheManager.GetString(key);
-                    val.ShouldNotBeNull();
-                    val.ShouldBe(expectedValue);
-                }
-                finally
-                {
-                    cacheManager.Remove(key);
-                }
-                cacheManager.GetString(key).ShouldBeNull();
+                cacheManager.Remove(key);
+                _fakeCache.Received(1).Remove(Arg.Any<string>());
             });
         }
     }

@@ -6,10 +6,9 @@ using Ridavei.Settings.Internals;
 using Ridavei.Settings.Tests.Managers;
 
 using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Options;
 using NUnit.Framework;
 using Shouldly;
+using NSubstitute;
 
 namespace Ridavei.Settings.Tests
 {
@@ -108,7 +107,8 @@ namespace Ridavei.Settings.Tests
             Should.NotThrow(() =>
             {
                 var builder = SettingsBuilder.CreateBuilder();
-                builder.SetDistributedCache(new MemoryDistributedCache(Options.Create<MemoryDistributedCacheOptions>(new MemoryDistributedCacheOptions())), Consts.DefaultCacheTimeout);
+                IDistributedCache fakeCache = Substitute.For<IDistributedCache>();
+                builder.SetDistributedCache(fakeCache, Consts.DefaultCacheTimeout);
             });
         }
     }

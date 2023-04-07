@@ -7,10 +7,9 @@ using Ridavei.Settings.Internals;
 using Ridavei.Settings.Tests.Managers;
 
 using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Options;
 using NUnit.Framework;
 using Shouldly;
+using NSubstitute;
 
 namespace Ridavei.Settings.Tests
 {
@@ -18,6 +17,14 @@ namespace Ridavei.Settings.Tests
     internal class ManagerTests
     {
         private const string DictionaryName = "TestDict";
+
+        private IDistributedCache _fakeCache;
+
+        [SetUp]
+        public void SetUp()
+        {
+            _fakeCache = Substitute.For<IDistributedCache>();
+        }
 
         [Test]
         public void Constructor__Created()
@@ -34,7 +41,7 @@ namespace Ridavei.Settings.Tests
         {
             Should.NotThrow(() =>
             {
-                var cacheManager = new CacheManager(new MemoryDistributedCache(Options.Create<MemoryDistributedCacheOptions>(new MemoryDistributedCacheOptions())), Consts.DefaultCacheTimeout);
+                var cacheManager = new CacheManager(_fakeCache, Consts.DefaultCacheTimeout);
                 var manager = new MockManager(true, true);
                 manager.Init(cacheManager);
                 manager.CacheManager.ShouldNotBeNull();
@@ -46,7 +53,7 @@ namespace Ridavei.Settings.Tests
         {
             Should.NotThrow(() =>
             {
-                var cacheManager = new CacheManager(new MemoryDistributedCache(Options.Create<MemoryDistributedCacheOptions>(new MemoryDistributedCacheOptions())), Consts.DefaultCacheTimeout);
+                var cacheManager = new CacheManager(_fakeCache, Consts.DefaultCacheTimeout);
                 var manager = new MockManager(true, true);
                 manager.Init(cacheManager);
 
