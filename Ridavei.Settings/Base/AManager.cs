@@ -8,9 +8,9 @@ using Ridavei.Settings.Interfaces;
 namespace Ridavei.Settings.Base
 {
     /// <summary>
-    /// Abstract manager class to help retrieve <see cref="ASettings"/>.
+    /// Abstract manager class to help retrieve <see cref="ISettings"/>.
     /// </summary>
-    public abstract class AManager : IManager
+    public abstract class AManager
     {
         private static readonly object _lock = new object();
 
@@ -32,14 +32,14 @@ namespace Ridavei.Settings.Base
         }
 
         /// <summary>
-        /// Retrieves the <see cref="ASettings"/> object for the specifed dictionary name.<para />
+        /// Retrieves the <see cref="ISettings"/> object for the specifed dictionary name.<para />
         /// Settings objects are stored in cache if caching was in the <see cref="SettingsBuilder"/> enabled.
         /// </summary>
         /// <param name="dictionaryName">Name of the dictionary</param>
         /// <returns>Settings</returns>
         /// <exception cref="ArgumentNullException">Throwed when the name of the dictionary is null, empty or whitespace.</exception>
         /// <exception cref="DictionaryNotFoundException">Throwed when the name of the dictionary was not found.</exception>
-        internal ASettings GetSettings(string dictionaryName)
+        internal ISettings GetSettings(string dictionaryName)
         {
             if (string.IsNullOrWhiteSpace(dictionaryName))
                 throw new ArgumentNullException(nameof(dictionaryName), "The name of the dictionary cannot be null or empty or whitespace.");
@@ -55,13 +55,13 @@ namespace Ridavei.Settings.Base
         }
 
         /// <summary>
-        /// Retrieves or creates the <see cref="ASettings"/> object for the specifed dictionary name.<para />
+        /// Retrieves or creates the <see cref="ISettings"/> object for the specifed dictionary name.<para />
         /// Settings objects are stored in cache if caching was in the <see cref="SettingsBuilder"/> enabled.
         /// </summary>
         /// <param name="dictionaryName">Name of the dictionary</param>
         /// <returns>Settings</returns>
         /// <exception cref="ArgumentNullException">Throwed when the name of the dictionary is null, empty or whitespace.</exception>
-        internal ASettings GetOrCreateSettings(string dictionaryName)
+        internal ISettings GetOrCreateSettings(string dictionaryName)
         {
             if (string.IsNullOrWhiteSpace(dictionaryName))
                 throw new ArgumentNullException(nameof(dictionaryName), "The name of the dictionary cannot be null or empty or whitespace.");
@@ -73,21 +73,21 @@ namespace Ridavei.Settings.Base
                     _settings.Add(dictionaryName, res);
                 }
             return res;
+        }
 
-									/// <summary>
-        /// Tries to retrieve the <see cref="ISettings"/> object for the specifed dictionary name.
+        /// <summary>
+        /// Tries to retrieve the <see cref="ASettings"/> object for the specifed dictionary name.
         /// </summary>
         /// <param name="dictionaryName">Name of the dictionary</param>
         /// <param name="settings">Retrieved Settings</param>
         /// <returns>True if the Settings exists or false if not.</returns>
-        protected abstract bool TryGetSettingsObject(string dictionaryName, out ISettings settings);
+        protected abstract bool TryGetSettingsObject(string dictionaryName, out ASettings settings);
 
         /// <summary>
         /// Creates the <see cref="ISettings"/> object for the specifed dictionary name.
         /// </summary>
         /// <param name="dictionaryName">Name of the dictionary</param>
         /// <returns>Settings</returns>
-        protected abstract ISettings CreateSettingsObject(string dictionaryName);
-        }
+        protected abstract ASettings CreateSettingsObject(string dictionaryName);
     }
 }

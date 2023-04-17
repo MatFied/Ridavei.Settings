@@ -3,6 +3,7 @@
 using Ridavei.Settings.Base;
 using Ridavei.Settings.Cache;
 using Ridavei.Settings.Exceptions;
+using Ridavei.Settings.Interfaces;
 using Ridavei.Settings.Internals;
 
 using Microsoft.Extensions.Caching.Distributed;
@@ -52,13 +53,13 @@ namespace Ridavei.Settings
         }
 
         /// <summary>
-        /// Retrieves the <see cref="ASettings"/> object for the specifed dictionary name.
+        /// Retrieves the <see cref="ISettings"/> object for the specifed dictionary name.
         /// </summary>
         /// <param name="dictionaryName">Name of the dictionary</param>
         /// <exception cref="ArgumentNullException">Throwed when the name of the dictionary is null, empty or whitespace.</exception>
         /// <exception cref="ManagerNotExistsException">Throwed when the manager object was not added.</exception>
         /// <returns>Settings</returns>
-        public ASettings GetSettings(string dictionaryName)
+        public ISettings GetSettings(string dictionaryName)
         {
             VerifyDictionaryName(dictionaryName);
 
@@ -67,13 +68,13 @@ namespace Ridavei.Settings
         }
 
         /// <summary>
-        /// Retrieves or creates the <see cref="ASettings"/> object for the specifed dictionary name.
+        /// Retrieves or creates the <see cref="ISettings"/> object for the specifed dictionary name.
         /// </summary>
         /// <param name="dictionaryName">Name of the dictionary</param>
         /// <exception cref="ArgumentNullException">Throwed when the name of the dictionary is null, empty or whitespace.</exception>
         /// <exception cref="ManagerNotExistsException">Throwed when the manager object was not added.</exception>
         /// <returns>Settings</returns>
-        public ASettings GetOrCreateSettings(string dictionaryName)
+        public ISettings GetOrCreateSettings(string dictionaryName)
         {
             VerifyDictionaryName(dictionaryName);
 
