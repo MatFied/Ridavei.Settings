@@ -13,7 +13,7 @@ The settings class implement the [IDisposable](https://learn.microsoft.com/pl-pl
 ### Get settings and then change and retrieve its values.
 ```csharp
 using Ridavei.Settings;
-using Ridavei.Settings.Base;
+using Ridavei.Settings.Interfaces;
 
 namespace TestProgram
 {
@@ -24,7 +24,7 @@ namespace TestProgram
             SettingsBuilder settingsBuilder = SettingsBuilder
                 .CreateBuilder()
                 .SetManager(YOUR_MANAGER_CLASS);
-            using (ASettings settings = settingsBuilder.GetSettings("DictionaryName")
+            using (ISettings settings = settingsBuilder.GetSettings("DictionaryName")
                 /*you can use the GetOrCreateSettings method if you are not sure if the settings dictionary exists*/)
             {
                 //You can use settings.Get("ExampleKey", "DefaultValue") if you want to retrieve the default value if the key doesn't exists.
@@ -40,7 +40,7 @@ namespace TestProgram
 using System.Collections.Generic;
 
 using Ridavei.Settings;
-using Ridavei.Settings.Base;
+using Ridavei.Settings.Interfaces;
 
 namespace TestProgram
 {
@@ -51,7 +51,7 @@ namespace TestProgram
             SettingsBuilder settingsBuilder = SettingsBuilder
                 .CreateBuilder()
                 .SetManager(YOUR_MANAGER_CLASS);
-            using (ASettings settings = settingsBuilder.GetSettings("DictionaryName")
+            using (ISettings settings = settingsBuilder.GetSettings("DictionaryName")
                 /*you can use the GetOrCreateSettings method if you are not sure if the settings dictionary exists*/)
             {
                 //Returns the IReadOnlyDictionary to prevent from value changing.
@@ -66,7 +66,7 @@ namespace TestProgram
 using System.Collections.Generic;
 
 using Ridavei.Settings;
-using Ridavei.Settings.Base;
+using Ridavei.Settings.Interfaces;
 
 namespace TestProgram
 {
@@ -80,7 +80,7 @@ namespace TestProgram
             SettingsBuilder settingsBuilder = SettingsBuilder
                 .CreateBuilder()
                 .SetManager(YOUR_MANAGER_CLASS);
-            using (ASettings settings = settingsBuilder.GetSettings("DictionaryName")
+            using (ISettings settings = settingsBuilder.GetSettings("DictionaryName")
                 /*you can use the GetOrCreateSettings method if you are not sure if the settings dictionary exists*/)
             {
                 settings.Set(newValues);
@@ -103,7 +103,7 @@ builder.SetDistributedCache(IDistributedCache distributedCache, int cacheTimeout
 using System.Collections.Generic;
 
 using Ridavei.Settings;
-using Ridavei.Settings.Base;
+using Ridavei.Settings.Interfaces;
 
 namespace TestProgram
 {
@@ -114,7 +114,7 @@ namespace TestProgram
             SettingsBuilder settingsBuilder = SettingsBuilder
                 .CreateBuilder()
                 .UseExampleManager();
-            using (ASettings settings = settingsBuilder.GetSettings("ExampleDictionary"))
+            using (ISettings settings = settingsBuilder.GetSettings("ExampleDictionary"))
             {
                 //Operations on the settings
             }
