@@ -3,13 +3,14 @@ using System.Collections.Generic;
 
 using Ridavei.Settings.Cache;
 using Ridavei.Settings.Exceptions;
+using Ridavei.Settings.Interfaces;
 
 namespace Ridavei.Settings.Base
 {
     /// <summary>
     /// Abstract manager class to help retrieve <see cref="ASettings"/>.
     /// </summary>
-    public abstract class AManager
+    public abstract class AManager : IManager
     {
         private static readonly object _lock = new object();
 
@@ -73,20 +74,5 @@ namespace Ridavei.Settings.Base
                 }
             return res;
         }
-
-        /// <summary>
-        /// Tries to retrieve the <see cref="ASettings"/> object for the specifed dictionary name.
-        /// </summary>
-        /// <param name="dictionaryName">Name of the dictionary</param>
-        /// <param name="settings">Retrieved Settings</param>
-        /// <returns>True if the Settings exists or false if not.</returns>
-        protected abstract bool TryGetSettingsObject(string dictionaryName, out ASettings settings);
-
-        /// <summary>
-        /// Creates the <see cref="ASettings"/> object for the specifed dictionary name.
-        /// </summary>
-        /// <param name="dictionaryName">Name of the dictionary</param>
-        /// <returns>Settings</returns>
-        protected abstract ASettings CreateSettingsObject(string dictionaryName);
     }
 }
