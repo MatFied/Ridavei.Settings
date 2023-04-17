@@ -103,6 +103,7 @@ builder.SetDistributedCache(IDistributedCache distributedCache, int cacheTimeout
 using System.Collections.Generic;
 
 using Ridavei.Settings;
+using Ridavei.Settings.Base;
 using Ridavei.Settings.Interfaces;
 
 namespace TestProgram
