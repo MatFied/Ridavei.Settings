@@ -2,13 +2,14 @@
 using System.Collections.Generic;
 
 using Ridavei.Settings.Cache;
+using Ridavei.Settings.Interfaces;
 
 namespace Ridavei.Settings.Base
 {
     /// <summary>
     /// Abstract class for the settings classes. It can retrieve and set objects in the settings.
     /// </summary>
-    public abstract class ASettings : IDisposable
+    public abstract class ASettings : ISettings
     {
         private static readonly object _lock = new object();
 
@@ -42,12 +43,7 @@ namespace Ridavei.Settings.Base
             GC.SuppressFinalize(this);
         }
 
-        /// <summary>
-        /// Sets the value for the specific key and if UseCache is true stores it in the cache.
-        /// </summary>
-        /// <param name="key">Settings key</param>
-        /// <param name="value">New value stored in the settings</param>
-        /// <exception cref="ArgumentNullException">Throwed when the key or value are null, empty or whitespace.</exception>
+        /// <inheritdoc/>
         public void Set(string key, string value)
         {
             if (string.IsNullOrWhiteSpace(key))
@@ -62,11 +58,7 @@ namespace Ridavei.Settings.Base
             }
         }
 
-        /// <summary>
-        /// Sets the values for the keys and if UseCache is true stores them in the cache.
-        /// </summary>
-        /// <param name="keyValues">Settings keys and values</param>
-        /// <exception cref="ArgumentNullException">Throwed when the dictionary, key or value are null, empty or whitespace.</exception>
+        /// <inheritdoc/>
         public void Set(IDictionary<string, string> keyValues)
         {
             if (keyValues == null)
@@ -75,13 +67,7 @@ namespace Ridavei.Settings.Base
                 Set(kvp.Key, kvp.Value);
         }
 
-        /// <summary>
-        /// Gets the value for the specific key or throws a <see cref="KeyNotFoundException"/> when not found.
-        /// </summary>
-        /// <param name="key">Settings key</param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentNullException">Throwed when the key is null, empty or whitespace.</exception>
-        /// <exception cref="KeyNotFoundException">Throwed when the key was not found.</exception>
+        /// <inheritdoc/>
         public string Get(string key)
         {
             if (string.IsNullOrWhiteSpace(key))
@@ -92,13 +78,7 @@ namespace Ridavei.Settings.Base
             return val;
         }
 
-        /// <summary>
-        /// Gets the value for the specific key if found, else return the default value.
-        /// </summary>
-        /// <param name="key">Settings key</param>
-        /// <param name="defaultValue">Default value that will be returned when the key was not found</param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentNullException">Throwed when the key is null, empty or whitespace.</exception>
+        /// <inheritdoc/>
         public string Get(string key, string defaultValue)
         {
             if (string.IsNullOrWhiteSpace(key))
@@ -109,10 +89,7 @@ namespace Ridavei.Settings.Base
             return val;
         }
 
-        /// <summary>
-        /// Retrieves all elements for the dictionary.
-        /// </summary>
-        /// <returns>Dictionary of keys and values.</returns>
+        /// <inheritdoc/>
         public IReadOnlyDictionary<string, string> GetAll()
         {
             return _useCache ? GetAllFromCache() : GetAllValues();
