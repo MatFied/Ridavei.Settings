@@ -2,13 +2,14 @@
 using System.Collections.Generic;
 
 using Ridavei.Settings.Cache;
+using Ridavei.Settings.Interfaces;
 
 namespace Ridavei.Settings.Base
 {
     /// <summary>
     /// Abstract class for the settings classes. It can retrieve and set objects in the settings.
     /// </summary>
-    public abstract class ASettings : IDisposable
+    public abstract class ASettings : ISettings, IDisposable
     {
         private static readonly object _lock = new object();
 
